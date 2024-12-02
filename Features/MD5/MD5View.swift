@@ -1,28 +1,34 @@
 import SwiftUI
 import CryptoKit
 
-// MD5长度选项
-enum MD5Length: String, CaseIterable {
-    case md5_16 = "16位"
-    case md5_32 = "32位"
-}
-
 struct MD5View: View {
     @State private var inputText: String = ""
     @State private var outputText: String = ""
-    @State private var isUppercase: Bool = true
-    @State private var isReversed: Bool = false
-    @State private var md5Length: MD5Length = .md5_32
+    @State private var md5Results: [String: String] = [:]
+    
+    // 定义固定顺序
+    private let resultOrder = [
+        "32位 小写",
+        "32位 大写",
+        "32位 反转",
+        "32位 大写反转",
+        "16位 小写",
+        "16位 反转"
+    ]
     
     var body: some View {
         VStack(spacing: 10) {
             // 输入区域
             GroupBox(label: Text("输入")) {
                 TextEditor(text: $inputText)
-                    .frame(height: 200)
+                    .frame(minHeight: 60, maxHeight: 200) // 默认约3行高度，最大200
+                    .lineLimit(3...10) // 默认显示3行，最多10行
+                    .onChange(of: inputText) { _, _ in
+                        generateMD5()
+                    }
             }
             
-            // 控制面板
+            // 控制按钮
             HStack {
                 Button("生成") {
                     generateMD5()
@@ -30,88 +36,98 @@ struct MD5View: View {
                 
                 Button("清空") {
                     inputText = ""
-                    outputText = ""
+                    generateMD5()
                 }
                 
-                Divider()
+                Spacer()
                 
-                Picker("MD5长度", selection: $md5Length) {
-                    ForEach(MD5Length.allCases, id: \.self) { length in
-                        Text(length.rawValue).tag(length)
-                    }
+                Button("复制全部") {
+                    let allResults = resultOrder.compactMap { key in
+                        if let value = md5Results[key] {
+                            return "\(key): \(value)"
+                        }
+                        return nil
+                    }.joined(separator: "\n")
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(allResults, forType: .string)
                 }
-                .pickerStyle(.segmented)
-                .frame(width: 200)
-                
-                Divider()
-                
-                Toggle("大写", isOn: $isUppercase)
-                    .toggleStyle(.switch)
-                    .onChange(of: isUppercase) { _, _ in
-                        if !outputText.isEmpty {
-                            generateMD5()
-                        }
-                    }
-                
-                Toggle("反转", isOn: $isReversed)
-                    .toggleStyle(.switch)
-                    .onChange(of: isReversed) { _, _ in
-                        if !outputText.isEmpty {
-                            generateMD5()
-                        }
-                    }
+                .disabled(md5Results.isEmpty)
             }
-            .padding()
+            .padding(.horizontal)
             
             // 输出区域
             GroupBox(label: Text("输出")) {
-                TextEditor(text: .constant(outputText))
-                    .frame(height: 200)
-            }
-            
-            // 复制按钮
-            if !outputText.isEmpty {
-                Button("复制结果") {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(outputText, forType: .string)
+                ScrollView {
+                    VStack(spacing: 12) {
+                        ForEach(resultOrder, id: \.self) { key in
+                            HStack {
+                                Text(key)
+                                    .frame(width: 120, alignment: .leading)
+                                    .foregroundColor(.secondary)
+                                
+                                Text(md5Results[key] ?? "")
+                                    .textSelection(.enabled)
+                                
+                                Spacer()
+                                
+                                Button("复制") {
+                                    if let value = md5Results[key] {
+                                        NSPasteboard.general.clearContents()
+                                        NSPasteboard.general.setString(value, forType: .string)
+                                    }
+                                }
+                                .buttonStyle(.borderless)
+                                .disabled(md5Results[key]?.isEmpty ?? true)
+                            }
+                            .padding(.horizontal)
+                            
+                            if key != resultOrder.last {
+                                Divider()
+                            }
+                        }
+                    }
+                    .padding(.vertical, 8)
                 }
-                .padding(.top, 5)
+                .frame(height: 300)
             }
+        }
+        .onAppear {
+            // 初始化空结果
+            generateMD5()
         }
     }
     
-    // MD5计算函数
     private func generateMD5() {
         guard !inputText.isEmpty else {
-            outputText = ""
+            // 初始化所有格式为空字符串
+            md5Results = Dictionary(uniqueKeysWithValues: resultOrder.map { ($0, "") })
             return
         }
         
         guard let inputData = inputText.data(using: .utf8) else {
-            outputText = "转换失败"
+            md5Results = Dictionary(uniqueKeysWithValues: resultOrder.map { ($0, "转换失败") })
             return
         }
         
-        // 计算MD5
+        // 计算基础MD5
         let computed = Insecure.MD5.hash(data: inputData)
-        var hashString = computed.map { String(format: "%02hhx", $0) }.joined()
+        let md5_32 = computed.map { String(format: "%02hhx", $0) }.joined()
         
-        // 处理大小写
-        hashString = isUppercase ? hashString.uppercased() : hashString.lowercased()
+        // 生成所有格式，按指定顺序
+        let md5_16 = {
+            let start = md5_32.index(md5_32.startIndex, offsetBy: 8)
+            let end = md5_32.index(start, offsetBy: 16)
+            return String(md5_32[start..<end])
+        }()
         
-        // 处理16位/32位
-        if md5Length == .md5_16 {
-            let startIndex = hashString.index(hashString.startIndex, offsetBy: 8)
-            let endIndex = hashString.index(startIndex, offsetBy: 16)
-            hashString = String(hashString[startIndex..<endIndex])
-        }
-        
-        // 处理反转
-        if isReversed {
-            hashString = String(hashString.reversed())
-        }
-        
-        outputText = hashString
+        md5Results = [
+            "32位 小写": md5_32,
+            "32位 大写": md5_32.uppercased(),
+            "32位 反转": String(md5_32.reversed()),
+            "32位 大写反转": String(md5_32.uppercased().reversed()),
+            "16位 小写": md5_16,
+            "16位 反转": String(md5_16.reversed())
+        ]
     }
 }
 
