@@ -45,6 +45,16 @@
 			path = CryptoToolUITests;
 			sourceTree = "<group>";
 		};
+		B57917BD2CFD819A0011E825 /* Common */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Common;
+			sourceTree = "<group>";
+		};
+		B57917C72CFD86690011E825 /* Features */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Features;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,10 +85,12 @@
 		B579177B2CFD7E210011E825 = {
 			isa = PBXGroup;
 			children = (
+				B57917C72CFD86690011E825 /* Features */,
 				B57917862CFD7E210011E825 /* CryptoTool */,
 				B57917982CFD7E220011E825 /* CryptoToolTests */,
 				B57917A22CFD7E220011E825 /* CryptoToolUITests */,
 				B57917852CFD7E210011E825 /* Products */,
+				B57917BD2CFD819A0011E825 /* Common */,
 			);
 			sourceTree = "<group>";
 		};
@@ -109,6 +121,8 @@
 			);
 			fileSystemSynchronizedGroups = (
 				B57917862CFD7E210011E825 /* CryptoTool */,
+				B57917BD2CFD819A0011E825 /* Common */,
+				B57917C72CFD86690011E825 /* Features */,
 			);
 			name = CryptoTool;
 			packageProductDependencies = (
