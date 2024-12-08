@@ -1,43 +1,6 @@
 import SwiftUI
 import CryptoKit
-import CommonCrypto
 import Security
-
-// 添加RSA相关的错误类型
-enum RSAError: Error, LocalizedError {
-    case invalidKey
-    case invalidKeyFormat
-    case invalidKeySize
-    case conversionFailed
-    case extractionFailed
-    case validationFailed
-    case invalidInput
-    case encryptionFailed
-    case decryptionFailed
-    
-    var errorDescription: String? {
-        switch self {
-        case .invalidKey:
-            return "无效的密钥"
-        case .invalidKeyFormat:
-            return "密钥格式错误"
-        case .invalidKeySize:
-            return "密钥长度不正确"
-        case .conversionFailed:
-            return "密钥转换失败"
-        case .extractionFailed:
-            return "密钥提取失败"
-        case .validationFailed:
-            return "密钥对验证失败"
-        case .invalidInput:
-            return "输入数据格式错误"
-        case .encryptionFailed:
-            return "加密失败"
-        case .decryptionFailed:
-            return "解密失败"
-        }
-    }
-}
 
 struct RSAView: View {
     @State private var inputText: String = ""
@@ -213,7 +176,7 @@ struct RSAView: View {
                         let privateKey = try parsePrivateKey()
                         let publicKey = try extractPublicKey(from: privateKey)
                         
-                        // ��出公钥数据
+                        // 出公钥数据
                         var error: Unmanaged<CFError>?
                         guard let publicKeyData = SecKeyCopyExternalRepresentation(publicKey, &error) as Data? else {
                             throw RSAError.extractionFailed
@@ -391,323 +354,6 @@ struct RSAView: View {
         }
     }
     
-    // 解析公钥
-    private func parsePublicKey() throws -> SecKey {
-        // 移除PEM格式的头尾和换行符
-        let keyString = publicKey
-            .replacingOccurrences(of: "-----BEGIN PUBLIC KEY-----", with: "")
-            .replacingOccurrences(of: "-----END PUBLIC KEY-----", with: "")
-            .replacingOccurrences(of: "\n", with: "")
-        
-        // Base64解码
-        guard let keyData = Data(base64Encoded: keyString) else {
-            throw RSAError.invalidKeyFormat
-        }
-        
-        // 创建密钥属性字典
-        let attributes: [String: Any] = [
-            kSecAttrKeyType as String: kSecAttrKeyTypeRSA,
-            kSecAttrKeyClass as String: kSecAttrKeyClassPublic,
-            kSecAttrKeySizeInBits as String: selectedKeySize
-        ]
-        
-        // 创建SecKey对象
-        var error: Unmanaged<CFError>?
-        guard let key = SecKeyCreateWithData(keyData as CFData,
-                                           attributes as CFDictionary,
-                                           &error) else {
-            throw RSAError.invalidKey
-        }
-        
-        return key
-    }
-    
-    // 解析私钥
-    private func parsePrivateKey() throws -> SecKey {
-        // 移除PEM格式的头尾和换行符
-        let keyString = privateKey
-            .replacingOccurrences(of: "-----BEGIN PRIVATE KEY-----", with: "")
-            .replacingOccurrences(of: "-----END PRIVATE KEY-----", with: "")
-            .replacingOccurrences(of: "\n", with: "")
-        
-        // Base64解码
-        guard let keyData = Data(base64Encoded: keyString) else {
-            throw RSAError.invalidKeyFormat
-        }
-        
-        // 创建密钥属性字典
-        let attributes: [String: Any] = [
-            kSecAttrKeyType as String: kSecAttrKeyTypeRSA,
-            kSecAttrKeyClass as String: kSecAttrKeyClassPrivate,
-            kSecAttrKeySizeInBits as String: selectedKeySize
-        ]
-        
-        // 创建SecKey对象
-        var error: Unmanaged<CFError>?
-        guard let key = SecKeyCreateWithData(keyData as CFData,
-                                           attributes as CFDictionary,
-                                           &error) else {
-            throw RSAError.invalidKey
-        }
-        
-        return key
-    }
-    
-    // 从私钥提取公钥
-    private func extractPublicKey(from privateKey: SecKey) throws -> SecKey {
-        guard let publicKey = SecKeyCopyPublicKey(privateKey) else {
-            throw RSAError.extractionFailed
-        }
-        return publicKey
-    }
-    
-    // 验证密钥对
-    private func validateKeyPair() throws {
-        let privateKey = try parsePrivateKey()
-        let publicKey = try parsePublicKey()
-        
-        // 生成测试数据
-        let testString = "RSA Key Pair Validation Test"
-        guard let testData = testString.data(using: .utf8) else {
-            throw RSAError.validationFailed
-        }
-        
-        // 使用公钥加密
-        var error: Unmanaged<CFError>?
-        guard let encryptedData = SecKeyCreateEncryptedData(
-            publicKey,
-            .rsaEncryptionPKCS1,
-            testData as CFData,
-            &error
-        ) as Data? else {
-            throw RSAError.validationFailed
-        }
-        
-        // 使用私钥解密
-        guard let decryptedData = SecKeyCreateDecryptedData(
-            privateKey,
-            .rsaEncryptionPKCS1,
-            encryptedData as CFData,
-            &error
-        ) as Data? else {
-            throw RSAError.validationFailed
-        }
-        
-        // 验证结果
-        guard let decryptedString = String(data: decryptedData, encoding: .utf8),
-              decryptedString == testString else {
-            throw RSAError.validationFailed
-        }
-        
-        outputText = "密钥对验证成功"
-    }
-    
-    // 格式化密钥为PEM格式
-    private func formatPublicKey() {
-        // 先清理掉所有可能存在的PEM头尾和换行符
-        let cleanKey = publicKey
-            .replacingOccurrences(of: "-----BEGIN PUBLIC KEY-----", with: "")
-            .replacingOccurrences(of: "-----END PUBLIC KEY-----", with: "")
-            .replacingOccurrences(of: "\n", with: "")
-        
-        // 重新添加PEM格式
-        var formatted = "-----BEGIN PUBLIC KEY-----\n"
-        formatted += cleanKey.chunks(ofCount: 64).joined(separator: "\n")
-        formatted += "\n-----END PUBLIC KEY-----"
-        publicKey = formatted
-    }
-    
-    // 格式化私钥为PEM格式
-    private func formatPrivateKey() {
-        // 先清理掉所有可能存在的PEM头尾和换行符
-        let cleanKey = privateKey
-            .replacingOccurrences(of: "-----BEGIN PRIVATE KEY-----", with: "")
-            .replacingOccurrences(of: "-----END PRIVATE KEY-----", with: "")
-            .replacingOccurrences(of: "\n", with: "")
-        
-        // 重新添加PEM格式
-        var formatted = "-----BEGIN PRIVATE KEY-----\n"
-        formatted += cleanKey.chunks(ofCount: 64).joined(separator: "\n")
-        formatted += "\n-----END PRIVATE KEY-----"
-        privateKey = formatted
-    }
-    
-    // 压缩公钥（移除PEM格式和换行符）
-    private func compressPublicKey() {
-        publicKey = publicKey
-            .replacingOccurrences(of: "-----BEGIN PUBLIC KEY-----", with: "")
-            .replacingOccurrences(of: "-----END PUBLIC KEY-----", with: "")
-            .replacingOccurrences(of: "\n", with: "")
-    }
-    
-    // 压缩私钥（移除PEM格式和换行符）
-    private func compressPrivateKey() {
-        privateKey = privateKey
-            .replacingOccurrences(of: "-----BEGIN PRIVATE KEY-----", with: "")
-            .replacingOccurrences(of: "-----END PRIVATE KEY-----", with: "")
-            .replacingOccurrences(of: "\n", with: "")
-    }
-    
-    // 在RSAView中添加生成密钥对的函数
-    private func generateKeyPair() {
-        // 创建密钥对属性字典
-        let attributes: [String: Any] = [
-            kSecAttrKeyType as String: kSecAttrKeyTypeRSA,
-            kSecAttrKeySizeInBits as String: selectedKeySize,
-            kSecPublicKeyAttrs as String: [
-                kSecAttrIsPermanent as String: false
-            ],
-            kSecPrivateKeyAttrs as String: [
-                kSecAttrIsPermanent as String: false
-            ]
-        ]
-        
-        var error: Unmanaged<CFError>?
-        guard let keyPair = SecKeyCreateRandomKey(attributes as CFDictionary, &error),
-              let publicKey = SecKeyCopyPublicKey(keyPair) else {
-            outputText = "生成密钥对失败: \(error?.takeRetainedValue().localizedDescription ?? "未知错误")"
-            return
-        }
-        
-        // 导出公钥
-        guard let publicKeyData = SecKeyCopyExternalRepresentation(publicKey, &error) as Data? else {
-            outputText = "导出公钥失败: \(error?.takeRetainedValue().localizedDescription ?? "未知错误")"
-            return
-        }
-        
-        // 导出私钥
-        guard let privateKeyData = SecKeyCopyExternalRepresentation(keyPair, &error) as Data? else {
-            outputText = "导出私钥失败: \(error?.takeRetainedValue().localizedDescription ?? "未知错误")"
-            return
-        }
-        
-        // 转换为PEM格式
-        var publicPEM = "-----BEGIN PUBLIC KEY-----\n"
-        publicPEM += publicKeyData.base64EncodedString().chunks(ofCount: 64).joined(separator: "\n")
-        publicPEM += "\n-----END PUBLIC KEY-----"
-        
-        var privatePEM = "-----BEGIN PRIVATE KEY-----\n"
-        privatePEM += privateKeyData.base64EncodedString().chunks(ofCount: 64).joined(separator: "\n")
-        privatePEM += "\n-----END PRIVATE KEY-----"
-        
-        // 更新UI时添加提示
-        DispatchQueue.main.async {
-            self.publicKey = publicPEM
-            self.privateKey = privatePEM
-            showMessage("密钥对生成成功")
-        }
-    }
-    
-    // ���离加密和解密函数
-    private func encryptRSA() {
-        do {
-            let publicKey = try parsePublicKey()
-            guard let data = inputText.data(using: .utf8) else {
-                throw RSAError.invalidInput
-            }
-            
-            var error: Unmanaged<CFError>?
-            guard let encryptedData = SecKeyCreateEncryptedData(
-                publicKey,
-                .rsaEncryptionPKCS1,
-                data as CFData,
-                &error
-            ) as Data? else {
-                throw RSAError.encryptionFailed
-            }
-            
-            // 根据选择的输出格式返回结果
-            switch selectedOutputEncoding {
-            case "HEX":
-                outputText = encryptedData.map { String(format: "%02x", $0) }.joined(separator: " ")
-            case "HEX(无空格)":
-                outputText = encryptedData.map { String(format: "%02x", $0) }.joined()
-            default: // Base64
-                outputText = encryptedData.base64EncodedString()
-            }
-        } catch {
-            outputText = "加密失败: \(error.localizedDescription)"
-        }
-    }
-    
-    private func decryptRSA() {
-        do {
-            let privateKey = try parsePrivateKey()
-            
-            // 根据输入格式解析数据
-            let encryptedData: Data
-            switch selectedOutputEncoding {
-            case "HEX", "HEX(无空格)":
-                let hex = inputText.replacingOccurrences(of: " ", with: "").lowercased()
-                var data = Data()
-                var temp = ""
-                for char in hex {
-                    temp += String(char)
-                    if temp.count == 2 {
-                        guard let num = UInt8(temp, radix: 16) else {
-                            throw RSAError.invalidInput
-                        }
-                        data.append(num)
-                        temp = ""
-                    }
-                }
-                if !temp.isEmpty {
-                    throw RSAError.invalidInput
-                }
-                encryptedData = data
-            default: // Base64
-                guard let data = Data(base64Encoded: inputText) else {
-                    throw RSAError.invalidInput
-                }
-                encryptedData = data
-            }
-            
-            var error: Unmanaged<CFError>?
-            guard let decryptedData = SecKeyCreateDecryptedData(
-                privateKey,
-                .rsaEncryptionPKCS1,
-                encryptedData as CFData,
-                &error
-            ) as Data? else {
-                throw RSAError.decryptionFailed
-            }
-            
-            guard let decryptedString = String(data: decryptedData, encoding: .utf8) else {
-                throw RSAError.decryptionFailed
-            }
-            
-            outputText = decryptedString
-        } catch {
-            outputText = "解密失败: \(error.localizedDescription)"
-        }
-    }
-    
-    // 添加密钥格式化和压缩功能
-    private func formatKey(_ key: String, isPublic: Bool) -> String {
-        let header = isPublic ? "-----BEGIN PUBLIC KEY-----" : "-----BEGIN PRIVATE KEY-----"
-        let footer = isPublic ? "-----END PUBLIC KEY-----" : "-----END PRIVATE KEY-----"
-        
-        let cleanKey = key
-            .replacingOccurrences(of: header, with: "")
-            .replacingOccurrences(of: footer, with: "")
-            .replacingOccurrences(of: "\n", with: "")
-        
-        var formatted = header + "\n"
-        formatted += cleanKey.chunks(ofCount: 64).joined(separator: "\n")
-        formatted += "\n" + footer
-        return formatted
-    }
-    
-    private func compressKey(_ key: String, isPublic: Bool) -> String {
-        let header = isPublic ? "-----BEGIN PUBLIC KEY-----" : "-----BEGIN PRIVATE KEY-----"
-        let footer = isPublic ? "-----END PUBLIC KEY-----" : "-----END PRIVATE KEY-----"
-        
-        return key
-            .replacingOccurrences(of: header, with: "")
-            .replacingOccurrences(of: footer, with: "")
-            .replacingOccurrences(of: "\n", with: "")
-    }
-    
     // 添加模数解析按钮
     private func addModulusButtons() -> some View {
         HStack(spacing: 12) {
@@ -741,60 +387,19 @@ struct RSAView: View {
     private func modulusSection() -> some View {
         Group {
             if showModulus {
-                GroupBox {
-                    VStack(alignment: .leading, spacing: 12) {
-                        // 公模显示
-                        HStack {
-                            Label("公模 Modulus", systemImage: "number.circle")
-                                .foregroundColor(.secondary)
-                                .font(.headline)
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                NSPasteboard.general.clearContents()
-                                NSPasteboard.general.setString(modulus, forType: .string)
-                            }) {
-                                Label("复制", systemImage: "doc.on.doc")
-                            }
-                            .buttonStyle(.bordered)
-                            .disabled(modulus.isEmpty)
+                SharedViews.GroupBoxView {
+                    ModulusView(
+                        modulus: modulus,
+                        privateExponent: privateExponent,
+                        onCopyModulus: {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(modulus, forType: .string)
+                        },
+                        onCopyExponent: {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(privateExponent, forType: .string)
                         }
-                        
-                        Text(modulus)
-                            .font(.system(.body, design: .monospaced))
-                            .textSelection(.enabled)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(8)
-                            .background(Color(NSColor.textBackgroundColor))
-                            .cornerRadius(6)
-                        
-                        // 私模显示
-                        HStack {
-                            Label("私模 Private Exponent", systemImage: "number.circle.fill")
-                                .foregroundColor(.secondary)
-                                .font(.headline)
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                NSPasteboard.general.clearContents()
-                                NSPasteboard.general.setString(privateExponent, forType: .string)
-                            }) {
-                                Label("复制", systemImage: "doc.on.doc")
-                            }
-                            .buttonStyle(.bordered)
-                            .disabled(privateExponent.isEmpty)
-                        }
-                        
-                        Text(privateExponent)
-                            .font(.system(.body, design: .monospaced))
-                            .textSelection(.enabled)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(8)
-                            .background(Color(NSColor.textBackgroundColor))
-                            .cornerRadius(6)
-                    }
+                    )
                 }
             }
         }
@@ -830,10 +435,10 @@ struct RSAView: View {
     
     // 从数据中提取模数和指数
     private func extractModulusAndExponent(from data: Data) throws -> (modulus: String, exponent: String) {
-        // 这里需要实现ASN.1解析来提取模数和指数
-        // 为简化示例，这里只返回十六进制格式的数���
-        let hexString = data.map { String(format: "%02x", $0) }.joined()
-        return (hexString, "10001") // 默认钥指数为65537
+        guard let result = ASN1Parser.extractModulusAndExponent(from: data) else {
+            throw RSAError.extractionFailed
+        }
+        return result
     }
     
     // 修改提示方法
@@ -856,60 +461,77 @@ struct RSAView: View {
             }
         }
     }
-}
-
-// 辅助扩展，用于分割字符串
-extension String {
-    func chunks(ofCount count: Int) -> [String] {
-        var chunks: [String] = []
-        var remaining = self
-        while !remaining.isEmpty {
-            let chunk = String(remaining.prefix(count))
-            chunks.append(chunk)
-            remaining = String(remaining.dropFirst(count))
-        }
-        return chunks
-    }
-}
-
-// 修改Toast视图
-struct ToastView: View {
-    let message: String
     
-    var body: some View {
-        HStack(alignment: .center, spacing: 8) {
-            Group {
-                Group {
-                    if message.contains("成功") {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                    } else if message.contains("失败") {
-                        Image(systemName: "exclamationmark.circle.fill")
-                            .foregroundColor(.red)
-                    } else {
-                        Image(systemName: "info.circle.fill")
-                            .foregroundColor(.blue)
-                    }
-                }
-                .imageScale(.large)
-                .frame(width: 20, height: 20)
-                
-                Text(message)
-                    .lineLimit(1)
-                    .fixedSize()
-            }
+    // 修改RSAView中的方法调用，使用新的工具类
+    private func formatPublicKey() {
+        publicKey = RSAKeyFormatter.formatPublicKey(publicKey)
+    }
+    
+    private func formatPrivateKey() {
+        privateKey = RSAKeyFormatter.formatPrivateKey(privateKey)
+    }
+    
+    private func compressPublicKey() {
+        publicKey = RSAKeyFormatter.compressKey(publicKey)
+    }
+    
+    private func compressPrivateKey() {
+        privateKey = RSAKeyFormatter.compressKey(privateKey)
+    }
+    
+    private func generateKeyPair() {
+        do {
+            let (pub, priv) = try RSACrypto.generateKeyPair(keySize: selectedKeySize)
+            publicKey = pub
+            privateKey = priv
+            showMessage("密钥对生成成功")
+        } catch {
+            showMessage("生成失败: \(error.localizedDescription)")
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color(NSColor.windowBackgroundColor))
-                .shadow(color: Color.black.opacity(0.15), radius: 4, x: 0, y: 2)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.gray.opacity(0.1), lineWidth: 0.5)
-        )
+    }
+    
+    private func validateKeyPair() throws {
+        let publicKey = try RSACrypto.parsePublicKey(publicKey, keySize: selectedKeySize)
+        let privateKey = try RSACrypto.parsePrivateKey(privateKey, keySize: selectedKeySize)
+        try RSACrypto.validateKeyPair(publicKey: publicKey, privateKey: privateKey)
+    }
+    
+    private func encryptRSA() {
+        do {
+            let publicKey = try RSACrypto.parsePublicKey(publicKey, keySize: selectedKeySize)
+            outputText = try RSACryptoHelper.encrypt(
+                text: inputText,
+                withPublicKey: publicKey,
+                outputEncoding: selectedOutputEncoding
+            )
+        } catch {
+            outputText = "加密失败: \(error.localizedDescription)"
+        }
+    }
+    
+    private func decryptRSA() {
+        do {
+            let privateKey = try RSACrypto.parsePrivateKey(privateKey, keySize: selectedKeySize)
+            outputText = try RSACryptoHelper.decrypt(
+                text: inputText,
+                withPrivateKey: privateKey,
+                inputEncoding: selectedOutputEncoding
+            )
+        } catch {
+            outputText = "解密失败: \(error.localizedDescription)"
+        }
+    }
+    
+    private func parsePublicKey() throws -> SecKey {
+        return try RSACrypto.parsePublicKey(publicKey, keySize: selectedKeySize)
+    }
+    
+    private func parsePrivateKey() throws -> SecKey {
+        return try RSACrypto.parsePrivateKey(privateKey, keySize: selectedKeySize)
+    }
+    
+    private func extractPublicKey(from privateKey: SecKey) throws -> SecKey {
+        return try RSACrypto.extractPublicKey(from: privateKey)
     }
 }
 
