@@ -64,7 +64,7 @@ struct ContentView: View {
                 }
                 .listStyle(SidebarListStyle())
             }
-            .frame(width: 200)
+            .frame(width: 220)
             .background(Color(NSColor.controlBackgroundColor))
             
             // 右侧内容区
@@ -86,10 +86,13 @@ struct ContentView: View {
                     MD5View()
                 }
             }
+            .frame(minWidth: 700, maxWidth: .infinity, minHeight: 600, maxHeight: .infinity)
             .padding()
             .background(Color(NSColor.controlBackgroundColor))
+            // 添加过渡动画
+            .animation(.easeInOut, value: selectedTab)
         }
-        .frame(minWidth: 800, minHeight: 500)
+        .frame(minWidth: 960, minHeight: 680)
     }
 }
 

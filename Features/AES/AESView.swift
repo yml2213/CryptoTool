@@ -13,12 +13,14 @@ struct AESView: View {
     @State private var selectedPadding: String = "PKCS7" // 默认PKCS7
     @State private var selectedKeyEncoding: String = "UTF8"
     @State private var selectedIVEncoding: String = "UTF8"
+    @State private var selectedOutputEncoding: String = "Base64" // 添加输出格式选择
     @Environment(\.colorScheme) var colorScheme
     
     private let modes = ["ECB", "CBC"]
     private let keySizes = [128, 192, 256]
     private let paddings = ["PKCS7", "Zero", "None"]
     private let encodings = ["UTF8", "HEX", "Base64"]
+    private let outputEncodings = ["Base64", "HEX"] // 输出格式选项
     
     private let tooltips = [
         "ecb": "ECB模式安全性较低，不推荐在实际应用中使用",
@@ -41,7 +43,8 @@ struct AESView: View {
             selectedKeySize.description,
             selectedPadding,
             selectedKeyEncoding,
-            selectedIVEncoding
+            selectedIVEncoding,
+            selectedOutputEncoding
         ].joined()
     }
     
@@ -206,6 +209,16 @@ struct AESView: View {
                 .help("清空所有输入和输出")
                 
                 Spacer()
+                
+                // 添加输出格式选择器
+                Picker("输出格式", selection: $selectedOutputEncoding) {
+                    ForEach(outputEncodings, id: \.self) { encoding in
+                        Text(encoding).tag(encoding)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 150)
+                .help("选择加密结果的输出格式")
                 
                 Button(action: {
                     NSPasteboard.general.clearContents()
@@ -433,12 +446,44 @@ struct AESView: View {
         }
         
         let encryptedData = Data(buffer.prefix(numBytesEncrypted))
-        return encryptedData.base64EncodedString()
+        // 根据选择的输出格式返回结果
+        switch selectedOutputEncoding {
+        case "HEX":
+            return encryptedData.map { String(format: "%02hhx", $0) }.joined(separator: " ")
+        default: // Base64
+            return encryptedData.base64EncodedString()
+        }
     }
     
     private func decryptAES(text: String, key: String, iv: String) throws -> String {
-        guard let data = Data(base64Encoded: text) else {
-            throw AESError.invalidInput
+        // 根据当前输出格式解析输入
+        let data: Data
+        switch selectedOutputEncoding {
+        case "HEX":
+            let hex = text.replacingOccurrences(of: " ", with: "")
+            var tempData = Data()
+            var temp = ""
+            
+            for char in hex {
+                temp += String(char)
+                if temp.count == 2 {
+                    guard let num = UInt8(temp, radix: 16) else {
+                        throw AESError.invalidInput
+                    }
+                    tempData.append(num)
+                    temp = ""
+                }
+            }
+            
+            if !temp.isEmpty {
+                throw AESError.invalidInput
+            }
+            data = tempData
+        default: // Base64
+            guard let base64Data = Data(base64Encoded: text) else {
+                throw AESError.invalidInput
+            }
+            data = base64Data
         }
         
         // 转换密钥和IV

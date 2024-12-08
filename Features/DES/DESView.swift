@@ -4,38 +4,41 @@ import CommonCrypto
 
 struct DESView: View {
     @State private var inputText: String = ""
-    @State private var key: String = ""
-    @State private var iv: String = ""
+    @State private var key: String = "01234567"  // 8字节默认密钥
+    @State private var iv: String = "01234567"   // 8字节默认IV
     @State private var outputText: String = ""
     @State private var isEncrypting: Bool = true
-    @State private var selectedMode: String = "CBC"
-    @State private var selectedKeyType: String = "DES"
-    @State private var selectedPadding: String = "PKCS7"
+    @State private var selectedMode: String = "CBC"      // 默认CBC模式
+    @State private var selectedPadding: String = "PKCS7" // 默认PKCS7
     @State private var selectedKeyEncoding: String = "UTF8"
     @State private var selectedIVEncoding: String = "UTF8"
+    @State private var selectedOutputEncoding: String = "Base64" // 添加输出格式选择
     @Environment(\.colorScheme) var colorScheme
     
-    private let modes = ["ECB", "CBC", "CFB", "OFB"]
-    private let keyTypes = ["DES", "3DES"]
+    private let modes = ["ECB", "CBC"]
     private let paddings = ["PKCS7", "Zero", "None"]
     private let encodings = ["UTF8", "HEX", "Base64"]
+    private let outputEncodings = ["Base64", "HEX"] // 输出格式选项
     
-    private var keySize: Int {
-        switch selectedKeyType {
-        case "3DES":
-            return kCCKeySize3DES
-        default:
-            return kCCKeySizeDES
-        }
-    }
+    private let tooltips = [
+        "ecb": "ECB模式安全性较低，不推荐在实际应用中使用",
+        "cbc": "CBC模式需要初始向量(IV)，安全性较高",
+        "pkcs7": "PKCS7填充是最常用的填充方式",
+        "zero": "零填充会在末尾补0",
+        "none": "无填充要求数据长度必须是8的倍数"
+    ]
     
-    private var algorithm: CCAlgorithm {
-        switch selectedKeyType {
-        case "3DES":
-            return CCAlgorithm(kCCAlgorithm3DES)
-        default:
-            return CCAlgorithm(kCCAlgorithmDES)
-        }
+    private var allValues: String {
+        [
+            inputText,
+            key,
+            iv,
+            isEncrypting.description,
+            selectedMode,
+            selectedPadding,
+            selectedKeyEncoding,
+            selectedIVEncoding
+        ].joined()
     }
     
     var body: some View {
@@ -48,13 +51,7 @@ struct DESView: View {
                 }
                 .pickerStyle(.segmented)
                 .frame(width: 200)
-                
-                Picker("算法", selection: $selectedKeyType) {
-                    ForEach(keyTypes, id: \.self) { type in
-                        Text(type).tag(type)
-                    }
-                }
-                .pickerStyle(.segmented)
+                .help(isEncrypting ? "将明文加密为密文" : "将密文解密为明文")
                 
                 Picker("加密模式", selection: $selectedMode) {
                     ForEach(modes, id: \.self) { mode in
@@ -62,6 +59,7 @@ struct DESView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                .help(tooltips[selectedMode.lowercased()] ?? "")
                 
                 Picker("填充模式", selection: $selectedPadding) {
                     ForEach(paddings, id: \.self) { padding in
@@ -69,15 +67,24 @@ struct DESView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                .help(tooltips[selectedPadding.lowercased()] ?? "")
             }
             .padding(.horizontal)
             
             // 输入区域
             GroupBox {
                 VStack(alignment: .leading, spacing: 12) {
-                    Label(isEncrypting ? "明文" : "密文", systemImage: "text.alignleft")
-                        .foregroundColor(.secondary)
-                        .font(.headline)
+                    HStack {
+                        Label(isEncrypting ? "明文" : "密文", systemImage: "text.alignleft")
+                            .foregroundColor(.secondary)
+                            .font(.headline)
+                        
+                        Spacer()
+                        
+                        Text("输入需要\(isEncrypting ? "加密" : "解密")的文本")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
                     
                     TextEditor(text: $inputText)
                         .font(.system(.body, design: .monospaced))
@@ -86,61 +93,83 @@ struct DESView: View {
                         .background(Color(NSColor.textBackgroundColor))
                         .cornerRadius(6)
                     
-                    HStack {
-                        Label("密钥 (\(selectedKeyType == "3DES" ? "24" : "8")字节)", systemImage: "key")
-                            .foregroundColor(.secondary)
-                            .font(.headline)
-                        
-                        Spacer()
-                        
-                        Button(action: {
-                            let randomKey = generateRandomBytes(count: keySize)
-                            key = formatToEncoding(randomKey, encoding: selectedKeyEncoding)
-                        }) {
-                            Label("生成", systemImage: "wand.and.stars")
-                        }
-                        .buttonStyle(.bordered)
-                        
-                        Picker("密钥编码", selection: $selectedKeyEncoding) {
-                            ForEach(encodings, id: \.self) { encoding in
-                                Text(encoding).tag(encoding)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: 250)
-                    }
-                    
-                    TextField("请输入密钥", text: $key)
-                        .textFieldStyle(.roundedBorder)
-                    
-                    if selectedMode != "ECB" {
+                    // 固定高度的容器
+                    VStack(alignment: .leading, spacing: 12) {
+                        // 密钥部分
                         HStack {
-                            Label("初始向量(IV) (8字节)", systemImage: "number")
+                            Label("密钥 (8字节)", systemImage: "key")
                                 .foregroundColor(.secondary)
                                 .font(.headline)
+                            
+                            Text("当前编码: \(selectedKeyEncoding)")
+                                .foregroundColor(.secondary)
+                                .font(.caption)
                             
                             Spacer()
                             
                             Button(action: {
-                                let randomIV = generateRandomBytes(count: kCCBlockSizeDES)
-                                iv = formatToEncoding(randomIV, encoding: selectedIVEncoding)
+                                let randomKey = generateRandomBytes(count: kCCKeySizeDES)
+                                key = formatToEncoding(randomKey, encoding: selectedKeyEncoding)
                             }) {
-                                Label("生成", systemImage: "wand.and.stars")
+                                Label("生成随机密钥", systemImage: "wand.and.stars")
                             }
                             .buttonStyle(.bordered)
+                            .help("生成一个随机的8字节密钥")
                             
-                            Picker("IV编码", selection: $selectedIVEncoding) {
+                            Picker("密钥编码", selection: $selectedKeyEncoding) {
                                 ForEach(encodings, id: \.self) { encoding in
                                     Text(encoding).tag(encoding)
                                 }
                             }
                             .pickerStyle(.segmented)
                             .frame(width: 250)
+                            .help("选择密钥的编码格式")
                         }
                         
-                        TextField("请输入IV", text: $iv)
+                        TextField("请输入密钥", text: $key)
                             .textFieldStyle(.roundedBorder)
+                            .help("输入8字节的密钥")
+                        
+                        // IV部分
+                        VStack(spacing: 12) {
+                            HStack {
+                                Label("初始向量(IV) (8字节)", systemImage: "number")
+                                    .foregroundColor(.secondary)
+                                    .font(.headline)
+                                
+                                Text("当前编码: \(selectedIVEncoding)")
+                                    .foregroundColor(.secondary)
+                                    .font(.caption)
+                                
+                                Spacer()
+                                
+                                Button(action: {
+                                    let randomIV = generateRandomBytes(count: kCCBlockSizeDES)
+                                    iv = formatToEncoding(randomIV, encoding: selectedIVEncoding)
+                                }) {
+                                    Label("生成随机IV", systemImage: "wand.and.stars")
+                                }
+                                .buttonStyle(.bordered)
+                                .help("生成一个随机的8字节IV")
+                                
+                                Picker("IV编码", selection: $selectedIVEncoding) {
+                                    ForEach(encodings, id: \.self) { encoding in
+                                        Text(encoding).tag(encoding)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+                                .frame(width: 250)
+                                .help("选择IV的编码格式")
+                            }
+                            
+                            TextField("请输入IV", text: $iv)
+                                .textFieldStyle(.roundedBorder)
+                                .help("输入8字节的初始向量")
+                        }
+                        .opacity(selectedMode == "ECB" ? 0 : 1)
+                        .allowsHitTesting(selectedMode != "ECB")
                     }
+                    .frame(height: 140)
                 }
             }
             
@@ -151,6 +180,7 @@ struct DESView: View {
                           systemImage: "arrow.right.circle.fill")
                 }
                 .buttonStyle(.borderedProminent)
+                .help(isEncrypting ? "使用当前设置加密数据" : "使用当前设置解密数据")
                 
                 Button(action: {
                     inputText = ""
@@ -161,8 +191,19 @@ struct DESView: View {
                     Label("清空", systemImage: "trash")
                 }
                 .buttonStyle(.bordered)
+                .help("清空所有输入和输出")
                 
                 Spacer()
+                
+                // 添加输出格式选择器
+                Picker("输出格式", selection: $selectedOutputEncoding) {
+                    ForEach(outputEncodings, id: \.self) { encoding in
+                        Text(encoding).tag(encoding)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 150)
+                .help("选择加密结果的输出格式")
                 
                 Button(action: {
                     NSPasteboard.general.clearContents()
@@ -172,15 +213,26 @@ struct DESView: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(outputText.isEmpty)
+                .help("将结果复制到剪贴板")
             }
             .padding(.horizontal)
             
             // 输出区域
             GroupBox {
                 VStack(alignment: .leading, spacing: 8) {
-                    Label(isEncrypting ? "密文" : "明文", systemImage: "key.fill")
-                        .foregroundColor(.secondary)
-                        .font(.headline)
+                    HStack {
+                        Label(isEncrypting ? "密文" : "明文", systemImage: "key.fill")
+                            .foregroundColor(.secondary)
+                            .font(.headline)
+                        
+                        Spacer()
+                        
+                        if !outputText.isEmpty {
+                            Text("处理完成")
+                                .foregroundColor(.green)
+                                .font(.caption)
+                        }
+                    }
                     
                     Text(outputText)
                         .font(.system(.body, design: .monospaced))
@@ -195,8 +247,19 @@ struct DESView: View {
             Spacer()
         }
         .padding()
-        .onChange(of: [selectedMode, selectedKeyType, selectedPadding]) { _ in
-            outputText = ""
+        .onChange(of: allValues) { _, _ in
+            processDES()
+        }
+        .onAppear {
+            // 初始化时设置默认值的编码格式
+            if let defaultKeyData = key.data(using: .utf8) {
+                key = formatToEncoding(defaultKeyData, encoding: selectedKeyEncoding)
+            }
+            if let defaultIVData = iv.data(using: .utf8) {
+                iv = formatToEncoding(defaultIVData, encoding: selectedIVEncoding)
+            }
+            // 初始化时处理一次
+            processDES()
         }
     }
     
@@ -267,7 +330,7 @@ struct DESView: View {
         let ivData = selectedMode != "ECB" ? try convertFromEncoding(iv, encoding: selectedIVEncoding) : Data(count: kCCBlockSizeDES)
         
         // 检查密钥长度
-        guard keyData.count == keySize else {
+        guard keyData.count == kCCKeySizeDES else {
             throw DESError.invalidKeySize
         }
         
@@ -308,7 +371,7 @@ struct DESView: View {
             ivData.withUnsafeBytes { ivBytes in
                 data.withUnsafeBytes { dataBytes in
                     CCCrypt(CCOperation(kCCEncrypt),
-                           algorithm,
+                           CCAlgorithm(kCCAlgorithmDES),
                            options,
                            keyBytes.baseAddress, keyData.count,
                            ivBytes.baseAddress,
@@ -324,12 +387,47 @@ struct DESView: View {
         }
         
         let encryptedData = Data(buffer.prefix(numBytesEncrypted))
-        return encryptedData.base64EncodedString()
+        // 根据选择的输出格式返回结果
+        switch selectedOutputEncoding {
+        case "HEX":
+            let hexString = encryptedData.map { String(format: "%02x", $0) }.joined()
+            var result = ""
+            for (index, char) in hexString.enumerated() {
+                result.append(char)
+                if index % 2 == 1 && index < hexString.count - 1 {
+                    result.append(" ")
+                }
+            }
+            return result
+        default: // Base64
+            return encryptedData.base64EncodedString()
+        }
     }
     
     private func decryptDES(text: String, key: String, iv: String) throws -> String {
-        guard let data = Data(base64Encoded: text) else {
-            throw DESError.invalidInput
+        // 根据当前输出格式解析输入
+        let data: Data
+        switch selectedOutputEncoding {
+        case "HEX":
+            let hex = text.replacingOccurrences(of: " ", with: "").lowercased()
+            var data = Data()
+            var index = hex.startIndex
+            while index < hex.endIndex {
+                let endIndex = hex.index(index, offsetBy: 2, limitedBy: hex.endIndex) ?? hex.endIndex
+                let byteString = String(hex[index..<endIndex])
+                if let byte = UInt8(byteString, radix: 16) {
+                    data.append(byte)
+                } else {
+                    throw DESError.invalidInput
+                }
+                index = endIndex
+            }
+            return String(data: data, encoding: .utf8) ?? ""
+        default: // Base64
+            guard let base64Data = Data(base64Encoded: text) else {
+                throw DESError.invalidInput
+            }
+            data = base64Data
         }
         
         // 转换密钥和IV
@@ -337,7 +435,7 @@ struct DESView: View {
         let ivData = selectedMode != "ECB" ? try convertFromEncoding(iv, encoding: selectedIVEncoding) : Data(count: kCCBlockSizeDES)
         
         // 检查密钥长度
-        guard keyData.count == keySize else {
+        guard keyData.count == kCCKeySizeDES else {
             throw DESError.invalidKeySize
         }
         
@@ -375,7 +473,7 @@ struct DESView: View {
             ivData.withUnsafeBytes { ivBytes in
                 data.withUnsafeBytes { dataBytes in
                     CCCrypt(CCOperation(kCCDecrypt),
-                           algorithm,
+                           CCAlgorithm(kCCAlgorithmDES),
                            options,
                            keyBytes.baseAddress, keyData.count,
                            ivBytes.baseAddress,
