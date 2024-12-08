@@ -8,13 +8,9 @@ struct ContentView: View {
         (icon: "number.circle", name: "MD5", description: "信息摘要算法"),
         (icon: "key.fill", name: "SHA", description: "安全散列算法"),
         (icon: "lock.fill", name: "HMAC", description: "哈希消息认证码"),
-        (icon: "shield.fill", name: "RC4", description: "流加密算法"),
         (icon: "lock.shield.fill", name: "AES", description: "高级加密标准"),
         (icon: "key.horizontal.fill", name: "DES", description: "数据加密标准"),
-        (icon: "key.horizontal", name: "3DES", description: "三重DES"),
-        (icon: "doc.fill", name: "Base64", description: "基础编码"),
-        (icon: "arrow.triangle.2.circlepath", name: "Rabbit", description: "流加密算法"),
-        (icon: "key.viewfinder", name: "PBKDF2/EvpKDF", description: "密钥派生函数")
+        (icon: "doc.fill", name: "Base64", description: "基础编码")
     ]
     
     var filteredOptions: [(icon: String, name: String, description: String)] {
@@ -77,12 +73,15 @@ struct ContentView: View {
                 case "MD5":
                     MD5View()
                 case "SHA":
-                   SHAView()
+                    SHAView()
                 case "HMAC":
-                    Text("HMAC View - Coming Soon")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Color(NSColor.controlBackgroundColor))
-                // ... 其他 case
+                    HMACView()
+                case "AES":
+                    AESView()
+                case "DES":
+                    DESView()
+                case "Base64":
+                    Base64View()
                 default:
                     MD5View()
                 }
