@@ -84,95 +84,103 @@ struct RSAView: View {
             // 密钥区域
             GroupBox {
                 VStack(alignment: .leading, spacing: 12) {
-                    // 公钥部分
-                    HStack {
-                        Label("公钥 Public Key", systemImage: "key")
-                            .foregroundColor(.secondary)
-                            .font(.headline)
-                        
-                        Spacer()
-                        
-                        Button(action: {
-                            formatPublicKey()
-                        }) {
-                            Label("格式化", systemImage: "text.alignleft")
+                    HStack(spacing: 20) {
+                        // 公钥部分
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Label("公钥 Public Key", systemImage: "key")
+                                    .foregroundColor(.secondary)
+                                    .font(.headline)
+                                
+                                Spacer()
+                                
+                                Button(action: {
+                                    formatPublicKey()
+                                }) {
+                                    Label("格式化", systemImage: "text.alignleft")
+                                }
+                                .buttonStyle(.bordered)
+                                
+                                Button(action: {
+                                    compressPublicKey()
+                                }) {
+                                    Label("压缩", systemImage: "arrow.down.right.and.arrow.up.left")
+                                }
+                                .buttonStyle(.bordered)
+                                
+                                Button(action: {
+                                    NSPasteboard.general.clearContents()
+                                    NSPasteboard.general.setString(publicKey, forType: .string)
+                                }) {
+                                    Label("复制", systemImage: "doc.on.doc")
+                                }
+                                .buttonStyle(.bordered)
+                                
+                                Button(action: {
+                                    publicKey = ""
+                                }) {
+                                    Label("清空", systemImage: "trash")
+                                }
+                                .buttonStyle(.bordered)
+                            }
+                            
+                            TextEditor(text: $publicKey)
+                                .font(.system(.body, design: .monospaced))
+                                .frame(height: 100)
+                                .padding(8)
+                                .background(Color(NSColor.textBackgroundColor))
+                                .cornerRadius(6)
                         }
-                        .buttonStyle(.bordered)
+                        .frame(maxWidth: .infinity)
                         
-                        Button(action: {
-                            compressPublicKey()
-                        }) {
-                            Label("压缩", systemImage: "arrow.down.right.and.arrow.up.left")
+                        // 私钥部分
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Label("私钥 Private Key", systemImage: "key.fill")
+                                    .foregroundColor(.secondary)
+                                    .font(.headline)
+                                
+                                Spacer()
+                                
+                                Button(action: {
+                                    formatPrivateKey()
+                                }) {
+                                    Label("格式化", systemImage: "text.alignleft")
+                                }
+                                .buttonStyle(.bordered)
+                                
+                                Button(action: {
+                                    compressPrivateKey()
+                                }) {
+                                    Label("压缩", systemImage: "arrow.down.right.and.arrow.up.left")
+                                }
+                                .buttonStyle(.bordered)
+                                
+                                Button(action: {
+                                    NSPasteboard.general.clearContents()
+                                    NSPasteboard.general.setString(privateKey, forType: .string)
+                                }) {
+                                    Label("复制", systemImage: "doc.on.doc")
+                                }
+                                .buttonStyle(.bordered)
+                                
+                                Button(action: {
+                                    privateKey = ""
+                                }) {
+                                    Label("清空", systemImage: "trash")
+                                }
+                                .buttonStyle(.bordered)
+                            }
+                            
+                            TextEditor(text: $privateKey)
+                                .font(.system(.body, design: .monospaced))
+                                .frame(height: 100)
+                                .padding(8)
+                                .background(Color(NSColor.textBackgroundColor))
+                                .cornerRadius(6)
                         }
-                        .buttonStyle(.bordered)
-                        
-                        Button(action: {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(publicKey, forType: .string)
-                        }) {
-                            Label("复制", systemImage: "doc.on.doc")
-                        }
-                        .buttonStyle(.bordered)
-                        
-                        Button(action: {
-                            publicKey = ""
-                        }) {
-                            Label("清空", systemImage: "trash")
-                        }
-                        .buttonStyle(.bordered)
+                        .frame(maxWidth: .infinity)
                     }
-                    
-                    TextEditor(text: $publicKey)
-                        .font(.system(.body, design: .monospaced))
-                        .frame(height: 100)
-                        .padding(8)
-                        .background(Color(NSColor.textBackgroundColor))
-                        .cornerRadius(6)
-                    
-                    // 私钥部分
-                    HStack {
-                        Label("私钥 Private Key", systemImage: "key.fill")
-                            .foregroundColor(.secondary)
-                            .font(.headline)
-                        
-                        Spacer()
-                        
-                        Button(action: {
-                            formatPrivateKey()
-                        }) {
-                            Label("格式化", systemImage: "text.alignleft")
-                        }
-                        .buttonStyle(.bordered)
-                        
-                        Button(action: {
-                            compressPrivateKey()
-                        }) {
-                            Label("压缩", systemImage: "arrow.down.right.and.arrow.up.left")
-                        }
-                        .buttonStyle(.bordered)
-                        
-                        Button(action: {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(privateKey, forType: .string)
-                        }) {
-                            Label("复制", systemImage: "doc.on.doc")
-                        }
-                        .buttonStyle(.bordered)
-                        
-                        Button(action: {
-                            privateKey = ""
-                        }) {
-                            Label("清空", systemImage: "trash")
-                        }
-                        .buttonStyle(.bordered)
-                    }
-                    
-                    TextEditor(text: $privateKey)
-                        .font(.system(.body, design: .monospaced))
-                        .frame(height: 100)
-                        .padding(8)
-                        .background(Color(NSColor.textBackgroundColor))
-                        .cornerRadius(6)
                 }
             }
             
@@ -205,7 +213,7 @@ struct RSAView: View {
                         let privateKey = try parsePrivateKey()
                         let publicKey = try extractPublicKey(from: privateKey)
                         
-                        // 导出公钥数据
+                        // ��出公钥数据
                         var error: Unmanaged<CFError>?
                         guard let publicKeyData = SecKeyCopyExternalRepresentation(publicKey, &error) as Data? else {
                             throw RSAError.extractionFailed
@@ -261,7 +269,7 @@ struct RSAView: View {
                 }
             }
             
-            // 控制按��
+            // 控制按钮
             HStack(spacing: 12) {
                 // 左侧按钮组
                 HStack(spacing: 12) {
@@ -590,7 +598,7 @@ struct RSAView: View {
         }
     }
     
-    // 分离加密和解密函数
+    // ���离加密和解密函数
     private func encryptRSA() {
         do {
             let publicKey = try parsePublicKey()
@@ -823,7 +831,7 @@ struct RSAView: View {
     // 从数据中提取模数和指数
     private func extractModulusAndExponent(from data: Data) throws -> (modulus: String, exponent: String) {
         // 这里需要实现ASN.1解析来提取模数和指数
-        // 为简化示例，这里只返回十六进制格式的数据
+        // 为简化示例，这里只返回十六进制格式的数���
         let hexString = data.map { String(format: "%02x", $0) }.joined()
         return (hexString, "10001") // 默认钥指数为65537
     }
