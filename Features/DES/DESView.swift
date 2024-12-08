@@ -53,22 +53,23 @@ struct DESView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            HStack(spacing: 20) {
-                SharedViews.ModePicker(
-                    title: "加密模式",
-                    selection: $selectedMode,
-                    options: modes,
-                    help: tooltips[selectedMode.lowercased()]
-                )
-                
-                SharedViews.ModePicker(
-                    title: "填充模式",
-                    selection: $selectedPadding,
-                    options: paddings,
-                    help: tooltips[selectedPadding.lowercased()]
-                )
+            SharedViews.GroupBoxView {
+                HStack(spacing: 20) {
+                    SharedViews.ModePicker(
+                        title: "加密模式",
+                        selection: $selectedMode,
+                        options: modes,
+                        help: tooltips[selectedMode.lowercased()]
+                    )
+                    
+                    SharedViews.ModePicker(
+                        title: "填充模式",
+                        selection: $selectedPadding,
+                        options: paddings,
+                        help: tooltips[selectedPadding.lowercased()]
+                    )
+                }
             }
-            .padding(.horizontal)
             
             SharedViews.GroupBoxView {
                 VStack(alignment: .leading, spacing: 12) {
@@ -87,6 +88,12 @@ struct DESView: View {
                                 TextField("输入8字节的密钥", text: $key)
                                     .textFieldStyle(.roundedBorder)
                                     .frame(minWidth: 100)
+                                    .onChange(of: key) { _, newValue in
+                                        let detectedEncoding = detectEncoding(newValue)
+                                        if detectedEncoding != selectedKeyEncoding {
+                                            selectedKeyEncoding = detectedEncoding
+                                        }
+                                    }
                             }
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -138,6 +145,12 @@ struct DESView: View {
                                     TextField("输入8字节的初始向量", text: $iv)
                                         .textFieldStyle(.roundedBorder)
                                         .frame(minWidth: 100)
+                                        .onChange(of: iv) { _, newValue in
+                                            let detectedEncoding = detectEncoding(newValue)
+                                            if detectedEncoding != selectedIVEncoding {
+                                                selectedIVEncoding = detectedEncoding
+                                            }
+                                        }
                                 }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -253,6 +266,29 @@ struct DESView: View {
         }
         .onChange(of: iv) {
             saveCurrentData()
+        }
+        .onChange(of: selectedKeyEncoding) { _, newValue in
+            if !key.isEmpty {
+                do {
+                    // 先将当前内容转换为二进制数据
+                    let keyData = try convertFromEncoding(key, encoding: selectedKeyEncoding)
+                    // 然后按新格式转换
+                    key = formatToEncoding(keyData, encoding: newValue)
+                } catch {
+                    // 如果转换失败，保持原有内容
+                    print("Key encoding conversion failed")
+                }
+            }
+        }
+        .onChange(of: selectedIVEncoding) { _, newValue in
+            if !iv.isEmpty {
+                do {
+                    let ivData = try convertFromEncoding(iv, encoding: selectedIVEncoding)
+                    iv = formatToEncoding(ivData, encoding: newValue)
+                } catch {
+                    print("IV encoding conversion failed")
+                }
+            }
         }
     }
     
@@ -521,6 +557,23 @@ struct DESView: View {
         return String((0..<count).map { _ in
             allowedChars[Int.random(in: 0..<allowedChars.count)]
         })
+    }
+    
+    private func detectEncoding(_ text: String) -> String {
+        // Base64格式检测
+        if let _ = Data(base64Encoded: text) {
+            return "Base64"
+        }
+        
+        // HEX格式检测
+        let hexPattern = "^[0-9A-Fa-f ]+$"
+        if let regex = try? NSRegularExpression(pattern: hexPattern),
+           regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil {
+            return "HEX"
+        }
+        
+        // 默认为UTF8
+        return "UTF8"
     }
 }
 
