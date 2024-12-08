@@ -16,11 +16,9 @@ struct ModulusView: View {
                 
                 Spacer()
                 
-                Button(action: onCopyModulus) {
-                    Label("复制", systemImage: "doc.on.doc")
-                }
-                .buttonStyle(.bordered)
-                .disabled(modulus.isEmpty)
+                Button("复制") { onCopyModulus() }
+                    .buttonStyle(.bordered)
+                    .disabled(modulus.isEmpty)
             }
             
             Text(modulus)
@@ -39,11 +37,9 @@ struct ModulusView: View {
                 
                 Spacer()
                 
-                Button(action: onCopyExponent) {
-                    Label("复制", systemImage: "doc.on.doc")
-                }
-                .buttonStyle(.bordered)
-                .disabled(privateExponent.isEmpty)
+                Button("复制") { onCopyExponent() }
+                    .buttonStyle(.bordered)
+                    .disabled(privateExponent.isEmpty)
             }
             
             Text(privateExponent)
