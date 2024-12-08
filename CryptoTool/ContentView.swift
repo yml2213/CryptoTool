@@ -94,33 +94,21 @@ struct ContentView: View {
         HSplitView {
             // 左侧导航栏
             VStack {
-                // 搜索框和编辑按钮
-                HStack {
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.secondary)
-                        TextField("搜索", text: $searchText)
-                            .textFieldStyle(PlainTextFieldStyle())
-                    }
-                    
-                    Spacer()
-                    
-                    // 添加编辑按钮
-                    Button(action: { isEditing.toggle() }) {
-                        Image(systemName: isEditing ? "checkmark.circle.fill" : "pencil")
-                            .foregroundColor(isEditing ? .blue : .secondary)
-                    }
-                    .buttonStyle(.borderless)
-                    .help(isEditing ? "完成编辑" : "编辑顺序")
-                }
-                .padding(8)
-                .background(Color(NSColor.controlBackgroundColor))
-                .cornerRadius(8)
-                .padding(.horizontal, 8)
-                .padding(.top, 8)
-                
                 // 列表
                 List {
+                    // 暂时注释掉编辑按钮
+                    /*HStack {
+                        Spacer()
+                        // 编辑按钮
+                        Button(action: { isEditing.toggle() }) {
+                            Image(systemName: isEditing ? "checkmark.circle.fill" : "pencil")
+                                .foregroundColor(isEditing ? .blue : .secondary)
+                        }
+                        .buttonStyle(.borderless)
+                        .help(isEditing ? "完成编辑" : "编辑顺序")
+                    }
+                    .padding(.horizontal, 8)*/
+                    
                     ForEach(Array(filteredOptions.enumerated()), id: \.1.id) { index, option in
                         listItemView(for: option, index: index)
                             .animation(.easeInOut, value: isEditing)
@@ -128,8 +116,9 @@ struct ContentView: View {
                 }
                 .listStyle(SidebarListStyle())
             }
-            .frame(width: 220)
+            .frame(width: 180)
             .background(Color(NSColor.controlBackgroundColor))
+            .searchable(text: $searchText, placement: .toolbar, prompt: "搜索")
             
             // 右侧内容区
             Group {
@@ -152,7 +141,7 @@ struct ContentView: View {
                     MD5View()
                 }
             }
-            .frame(minWidth: 700, maxWidth: .infinity, minHeight: 600, maxHeight: .infinity)
+            .frame(minWidth: 700, maxWidth: .infinity, minHeight: 00, maxHeight: .infinity)
             .padding()
             .background(Color(NSColor.controlBackgroundColor))
             // 添加过渡动画
