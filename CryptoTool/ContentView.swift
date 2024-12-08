@@ -77,9 +77,7 @@ struct ContentView: View {
                 case "MD5":
                     MD5View()
                 case "SHA":
-                    Text("SHA View - Coming Soon")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Color(NSColor.controlBackgroundColor))
+                   SHAView()
                 case "HMAC":
                     Text("HMAC View - Coming Soon")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
