@@ -20,6 +20,17 @@ struct AESView: View {
     private let paddings = ["PKCS7", "Zero", "None"]
     private let encodings = ["UTF8", "HEX", "Base64"]
     
+    private let tooltips = [
+        "ecb": "ECB模式安全性较低，不推荐在实际应用中使用",
+        "cbc": "CBC模式需要初始向量(IV)，安全性较高",
+        "key128": "128位密钥(16字节)，适用于大多数场景",
+        "key192": "192位密钥(24字节)，提供更高安全性",
+        "key256": "256位密钥(32字节)，提供最高安全性",
+        "pkcs7": "PKCS7填充是最常用的填充方式",
+        "zero": "零填充会在末尾补0",
+        "none": "无填充要求数据长度必须是16的倍数"
+    ]
+    
     private var allValues: String {
         [
             inputText,
@@ -44,6 +55,7 @@ struct AESView: View {
                 }
                 .pickerStyle(.segmented)
                 .frame(width: 200)
+                .help(isEncrypting ? "将明文加密为密文" : "将密文解密为明文")
                 
                 Picker("密钥长度", selection: $selectedKeySize) {
                     ForEach(keySizes, id: \.self) { size in
@@ -51,6 +63,7 @@ struct AESView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                .help("选择AES密钥长度：\(tooltips["key\(selectedKeySize)"] ?? "")")
                 
                 Picker("加密模式", selection: $selectedMode) {
                     ForEach(modes, id: \.self) { mode in
@@ -58,6 +71,7 @@ struct AESView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                .help(tooltips[selectedMode.lowercased()] ?? "")
                 
                 Picker("填充模式", selection: $selectedPadding) {
                     ForEach(paddings, id: \.self) { padding in
@@ -65,15 +79,24 @@ struct AESView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                .help(tooltips[selectedPadding.lowercased()] ?? "")
             }
             .padding(.horizontal)
             
-            // 输入域
+            // 输入区域
             GroupBox {
                 VStack(alignment: .leading, spacing: 12) {
-                    Label(isEncrypting ? "明文" : "密文", systemImage: "text.alignleft")
-                        .foregroundColor(.secondary)
-                        .font(.headline)
+                    HStack {
+                        Label(isEncrypting ? "明文" : "密文", systemImage: "text.alignleft")
+                            .foregroundColor(.secondary)
+                            .font(.headline)
+                        
+                        Spacer()
+                        
+                        Text("输入需要\(isEncrypting ? "加密" : "解密")的文本")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
                     
                     TextEditor(text: $inputText)
                         .font(.system(.body, design: .monospaced))
@@ -90,15 +113,20 @@ struct AESView: View {
                                 .foregroundColor(.secondary)
                                 .font(.headline)
                             
+                            Text("当前编码: \(selectedKeyEncoding)")
+                                .foregroundColor(.secondary)
+                                .font(.caption)
+                            
                             Spacer()
                             
                             Button(action: {
                                 let randomKey = generateRandomBytes(count: selectedKeySize/8)
                                 key = formatToEncoding(randomKey, encoding: selectedKeyEncoding)
                             }) {
-                                Label("生成", systemImage: "wand.and.stars")
+                                Label("生成随机密钥", systemImage: "wand.and.stars")
                             }
                             .buttonStyle(.bordered)
+                            .help("生成一个随机的\(selectedKeySize)位密钥")
                             
                             Picker("密钥编码", selection: $selectedKeyEncoding) {
                                 ForEach(encodings, id: \.self) { encoding in
@@ -107,17 +135,23 @@ struct AESView: View {
                             }
                             .pickerStyle(.segmented)
                             .frame(width: 250)
+                            .help("选择密钥的编码格式")
                         }
                         
                         TextField("请输入密钥", text: $key)
                             .textFieldStyle(.roundedBorder)
+                            .help("输入\(selectedKeySize/8)字节的密钥")
                         
-                        // IV部分 - 使用固定高度的容器
+                        // IV部分
                         VStack(spacing: 12) {
                             HStack {
                                 Label("初始向量(IV) (16字节)", systemImage: "number")
                                     .foregroundColor(.secondary)
                                     .font(.headline)
+                                
+                                Text("当前编码: \(selectedIVEncoding)")
+                                    .foregroundColor(.secondary)
+                                    .font(.caption)
                                 
                                 Spacer()
                                 
@@ -125,9 +159,10 @@ struct AESView: View {
                                     let randomIV = generateRandomBytes(count: 16)
                                     iv = formatToEncoding(randomIV, encoding: selectedIVEncoding)
                                 }) {
-                                    Label("生成", systemImage: "wand.and.stars")
+                                    Label("生成随机IV", systemImage: "wand.and.stars")
                                 }
                                 .buttonStyle(.bordered)
+                                .help("生成一个随机的16字节IV")
                                 
                                 Picker("IV编码", selection: $selectedIVEncoding) {
                                     ForEach(encodings, id: \.self) { encoding in
@@ -136,15 +171,17 @@ struct AESView: View {
                                 }
                                 .pickerStyle(.segmented)
                                 .frame(width: 250)
+                                .help("选择IV的编码格式")
                             }
                             
                             TextField("请输入IV", text: $iv)
                                 .textFieldStyle(.roundedBorder)
+                                .help("输入16字节的初始向量")
                         }
                         .opacity(selectedMode == "ECB" ? 0 : 1)
-                        .allowsHitTesting(selectedMode != "ECB") // 禁用ECB模式下的IV输入
+                        .allowsHitTesting(selectedMode != "ECB")
                     }
-                    .frame(height: 140) // 固定容器高度
+                    .frame(height: 140)
                 }
             }
             
@@ -155,6 +192,7 @@ struct AESView: View {
                           systemImage: "arrow.right.circle.fill")
                 }
                 .buttonStyle(.borderedProminent)
+                .help(isEncrypting ? "使用当前设置加密数据" : "使用当前设置解密数据")
                 
                 Button(action: {
                     inputText = ""
@@ -165,6 +203,7 @@ struct AESView: View {
                     Label("清空", systemImage: "trash")
                 }
                 .buttonStyle(.bordered)
+                .help("清空所有输入和输出")
                 
                 Spacer()
                 
@@ -176,15 +215,26 @@ struct AESView: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(outputText.isEmpty)
+                .help("将结果复制到剪贴板")
             }
             .padding(.horizontal)
             
             // 输出区域
             GroupBox {
                 VStack(alignment: .leading, spacing: 8) {
-                    Label(isEncrypting ? "密文" : "明文", systemImage: "key.fill")
-                        .foregroundColor(.secondary)
-                        .font(.headline)
+                    HStack {
+                        Label(isEncrypting ? "密文" : "明文", systemImage: "key.fill")
+                            .foregroundColor(.secondary)
+                            .font(.headline)
+                        
+                        Spacer()
+                        
+                        if !outputText.isEmpty {
+                            Text("处理完成")
+                                .foregroundColor(.green)
+                                .font(.caption)
+                        }
+                    }
                     
                     Text(outputText)
                         .font(.system(.body, design: .monospaced))
