@@ -105,54 +105,102 @@ struct AESView: View {
             SharedViews.GroupBoxView {
                 VStack(alignment: .leading, spacing: 12) {
                     // 密钥部分
-                    HStack {
-                        SharedViews.KeyInput(
-                            title: "密钥 (\(selectedKeySize/8)字节)",
-                            systemImage: "key",
-                            text: $key,
-                            help: "输入\(selectedKeySize/8)字节的密钥"
-                        )
-                        
-                        Button(action: {
-                            let randomKey = generateRandomUTF8String(count: selectedKeySize/8)
-                            key = randomKey
-                        }) {
-                            Label("生成随机密钥", systemImage: "wand.and.stars")
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("密钥 (\(selectedKeySize/8)字节)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            HStack(spacing: 6) {
+                                Image(systemName: "key")
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 16)
+                                
+                                TextField("输入\(selectedKeySize/8)字节的密钥", text: $key)
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(minWidth: 100)
+                            }
                         }
-                        .buttonStyle(.bordered)
-                        .help("生成一个随机的\(selectedKeySize/8)字节密钥")
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         
-                        SharedViews.EncodingPicker(
-                            title: "密钥编码",
-                            selection: $selectedKeyEncoding,
-                            options: encodings
-                        )
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(" ")  // 空占位符，用于对齐
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            Button(action: {
+                                let randomKey = generateRandomUTF8String(count: selectedKeySize/8)
+                                key = randomKey
+                            }) {
+                                Label("生成随机密钥", systemImage: "wand.and.stars")
+                            }
+                            .buttonStyle(.bordered)
+                            .help("生成一个随机的\(selectedKeySize/8)字节密钥")
+                            .frame(width: 120)
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(" ")  // 空占位符，用于对齐
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            SharedViews.EncodingPicker(
+                                title: "密钥编码",
+                                selection: $selectedKeyEncoding,
+                                options: encodings
+                            )
+                            .frame(width: 300)
+                        }
                     }
                     
                     // IV部分
                     if selectedMode != "ECB" {
-                        HStack {
-                            SharedViews.KeyInput(
-                                title: "初始向量(IV) (16字节)",
-                                systemImage: "number",
-                                text: $iv,
-                                help: "输入16字节的初始向量"
-                            )
-                            
-                            Button(action: {
-                                let randomIV = generateRandomUTF8String(count: 16)
-                                iv = randomIV
-                            }) {
-                                Label("生成随机IV", systemImage: "wand.and.stars")
+                        HStack(alignment: .firstTextBaseline, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("初始向量(IV) (16字节)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                HStack(spacing: 6) {
+                                    Image(systemName: "number")
+                                        .foregroundColor(.secondary)
+                                        .frame(width: 16)
+                                    
+                                    TextField("输入16字节的初始向量", text: $iv)
+                                        .textFieldStyle(.roundedBorder)
+                                        .frame(minWidth: 100)
+                                }
                             }
-                            .buttonStyle(.bordered)
-                            .help("生成一个随机的16字节IV")
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             
-                            SharedViews.EncodingPicker(
-                                title: "IV编码",
-                                selection: $selectedIVEncoding,
-                                options: encodings
-                            )
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(" ")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                Button(action: {
+                                    let randomIV = generateRandomUTF8String(count: 16)
+                                    iv = randomIV
+                                }) {
+                                    Label("生成随机IV", systemImage: "wand.and.stars")
+                                }
+                                .buttonStyle(.bordered)
+                                .help("生成一个随机的16字节IV")
+                                .frame(width: 120)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(" ")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                SharedViews.EncodingPicker(
+                                    title: "IV编码",
+                                    selection: $selectedIVEncoding,
+                                    options: encodings
+                                )
+                                .frame(width: 300)
+                            }
                         }
                     }
                 }
@@ -384,7 +432,7 @@ struct AESView: View {
             throw AESError.invalidInput
         }
         
-        // 设置填充
+        // ��置填充
         switch selectedPadding {
         case "PKCS7":
             options |= CCOptions(kCCOptionPKCS7Padding)
@@ -404,7 +452,7 @@ struct AESView: View {
         var buffer = [UInt8](repeating: 0, count: bufferSize)
         var numBytesEncrypted: size_t = 0
         
-        // ���择AES算法
+        // 择AES算法
         let algorithm: CCAlgorithm = UInt32(kCCAlgorithmAES)
         
         let cryptStatus = keyData.withUnsafeBytes { keyBytes in
