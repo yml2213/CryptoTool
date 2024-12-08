@@ -1,5 +1,6 @@
 import SwiftUI
 
+
 struct ContentView: View {
     @State private var selectedTab = "MD5"
     @State private var searchText = ""
@@ -11,6 +12,7 @@ struct ContentView: View {
         (icon: "lock.fill", name: "HMAC", description: "哈希消息认证码"),
         (icon: "lock.shield.fill", name: "AES", description: "高级加密标准"),
         (icon: "key.horizontal.fill", name: "DES", description: "数据加密标准"),
+        (icon: "key.horizontal", name: "RSA", description: "非对称加密算法"),
         (icon: "doc.fill", name: "Base64", description: "基础编码")
     ]
     
@@ -142,6 +144,8 @@ struct ContentView: View {
                     AESView()
                 case "DES":
                     DESView()
+                case "RSA":
+                    RSAView()
                 case "Base64":
                     Base64View()
                 default:
@@ -156,7 +160,8 @@ struct ContentView: View {
         }
         .frame(minWidth: 960, minHeight: 680)
         .onAppear {
-            // 加载保存的顺序
+            // 打印当前选项列表
+            print("Current crypto options:", cryptoOptions.map { $0.name })
             loadOrder()
         }
     }
@@ -170,7 +175,7 @@ struct ContentView: View {
     // 从UserDefaults加载顺序
     private func loadOrder() {
         guard let savedOrder = UserDefaults.standard.array(forKey: "cryptoOptionsOrder") as? [[String: String]] else {
-            return
+            return // 如果没有保存的顺序，使用默认顺序
         }
         
         let loadedOptions = savedOrder.compactMap { dict -> (icon: String, name: String, description: String)? in
@@ -182,8 +187,15 @@ struct ContentView: View {
             return (icon: icon, name: name, description: description)
         }
         
-        if !loadedOptions.isEmpty {
+        // 确保加载的选项包含所有必需的项目
+        let requiredNames = ["MD5", "SHA", "HMAC", "AES", "DES", "RSA", "Base64"]
+        let loadedNames = loadedOptions.map { $0.name }
+        
+        if !loadedOptions.isEmpty && requiredNames.allSatisfy({ loadedNames.contains($0) }) {
             cryptoOptions = loadedOptions
+        } else {
+            // 如果保存的数据不完整，使用默认选项
+            print("使用默认加密选项列表")
         }
     }
 }
