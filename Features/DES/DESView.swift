@@ -42,222 +42,118 @@ struct DESView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            // 模式选择
             HStack(spacing: 20) {
-                Picker("加密模式", selection: $selectedMode) {
-                    ForEach(modes, id: \.self) { mode in
-                        Text(mode).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .help(tooltips[selectedMode.lowercased()] ?? "")
+                SharedViews.ModePicker(
+                    title: "加密模式",
+                    selection: $selectedMode,
+                    options: modes,
+                    help: tooltips[selectedMode.lowercased()]
+                )
                 
-                Picker("填充模式", selection: $selectedPadding) {
-                    ForEach(paddings, id: \.self) { padding in
-                        Text(padding).tag(padding)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .help(tooltips[selectedPadding.lowercased()] ?? "")
+                SharedViews.ModePicker(
+                    title: "填充模式",
+                    selection: $selectedPadding,
+                    options: paddings,
+                    help: tooltips[selectedPadding.lowercased()]
+                )
             }
             .padding(.horizontal)
             
-            // 密钥和IV设置区域
-            GroupBox {
+            SharedViews.GroupBoxView {
                 VStack(alignment: .leading, spacing: 12) {
-                    // 密钥部分
                     HStack {
-                        Label("密钥 (8字节)", systemImage: "key")
-                            .foregroundColor(.secondary)
-                            .font(.headline)
+                        SharedViews.KeyInput(
+                            title: "密钥 (8字节)",
+                            systemImage: "key",
+                            text: $key,
+                            help: "输入8字节的密钥"
+                        )
                         
-                        Text("当前编码: \(selectedKeyEncoding)")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
-                        
-                        Spacer()
-                        
-                        Button(action: {
-                            let randomKey = generateRandomBytes(count: kCCKeySizeDES)
-                            key = formatToEncoding(randomKey, encoding: selectedKeyEncoding)
-                        }) {
-                            Label("生成随机密钥", systemImage: "wand.and.stars")
-                        }
-                        .buttonStyle(.bordered)
-                        .help("生成一个随机的8字节密钥")
-                        
-                        Picker("密钥编码", selection: $selectedKeyEncoding) {
-                            ForEach(encodings, id: \.self) { encoding in
-                                Text(encoding).tag(encoding)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: 250)
-                        .help("选择密钥的编码格式")
+                        SharedViews.EncodingPicker(
+                            title: "密钥编码",
+                            selection: $selectedKeyEncoding,
+                            options: encodings
+                        )
                     }
                     
-                    TextField("请输入密钥", text: $key)
-                        .textFieldStyle(.roundedBorder)
-                        .help("输入8字节的密钥")
-                    
-                    // IV部分
-                    VStack(spacing: 12) {
+                    if selectedMode != "ECB" {
                         HStack {
-                            Label("初始向量(IV) (8字节)", systemImage: "number")
-                                .foregroundColor(.secondary)
-                                .font(.headline)
+                            SharedViews.KeyInput(
+                                title: "初始向量(IV) (8字节)",
+                                systemImage: "number",
+                                text: $iv,
+                                help: "输入8字节的初始向量"
+                            )
                             
-                            Text("当前编码: \(selectedIVEncoding)")
-                                .foregroundColor(.secondary)
-                                .font(.caption)
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                let randomIV = generateRandomBytes(count: kCCBlockSizeDES)
-                                iv = formatToEncoding(randomIV, encoding: selectedIVEncoding)
-                            }) {
-                                Label("生成随机IV", systemImage: "wand.and.stars")
-                            }
-                            .buttonStyle(.bordered)
-                            .help("生成一个随机的8字节IV")
-                            
-                            Picker("IV编码", selection: $selectedIVEncoding) {
-                                ForEach(encodings, id: \.self) { encoding in
-                                    Text(encoding).tag(encoding)
-                                }
-                            }
-                            .pickerStyle(.segmented)
-                            .frame(width: 250)
-                            .help("选择IV的编码格式")
+                            SharedViews.EncodingPicker(
+                                title: "IV编码",
+                                selection: $selectedIVEncoding,
+                                options: encodings
+                            )
                         }
-                        
-                        TextField("请输入IV", text: $iv)
-                            .textFieldStyle(.roundedBorder)
-                            .help("输入8字节的初始向量")
                     }
-                    .opacity(selectedMode == "ECB" ? 0 : 1)
-                    .allowsHitTesting(selectedMode != "ECB")
                 }
             }
             
-            // 输入输出区域
-            GroupBox {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Label("输入文本", systemImage: "text.alignleft")
-                            .foregroundColor(.secondary)
-                            .font(.headline)
-                        
-                        Spacer()
-                        
-                        Text("输入需要处理的文本")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
+            SharedViews.GroupBoxView {
+                SharedViews.InputTextEditor(
+                    title: "输入文本",
+                    placeholder: "输入需要处理的文本",
+                    text: $inputText
+                )
+                
+                HStack {
+                    Button(action: { encryptDES() }) {
+                        Label("加密", systemImage: "lock.fill")
                     }
+                    .buttonStyle(.borderedProminent)
                     
-                    TextEditor(text: $inputText)
-                        .font(.system(.body, design: .monospaced))
-                        .frame(height: 80)
-                        .padding(8)
-                        .background(Color(NSColor.textBackgroundColor))
-                        .cornerRadius(6)
-                    
-                    // 控制按钮
-                    HStack(spacing: 12) {
-                        // 左侧按钮组
-                        HStack(spacing: 12) {
-                            Button(action: {
-                                do {
-                                    outputText = try encryptDES(text: inputText, key: key, iv: iv)
-                                } catch {
-                                    outputText = "加密失败: \(error.localizedDescription)"
-                                }
-                            }) {
-                                Label("加密", systemImage: "lock.fill")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .help("使用当前设置加密数据")
-                            
-                            Button(action: {
-                                do {
-                                    outputText = try decryptDES(text: inputText, key: key, iv: iv)
-                                } catch {
-                                    outputText = "解密失败: \(error.localizedDescription)"
-                                }
-                            }) {
-                                Label("解密", systemImage: "lock.open.fill")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .help("使用当前设置解密数据")
-                            
-                            Button(action: {
-                                inputText = ""
-                                outputText = ""
-                            }) {
-                                Label("清空", systemImage: "trash")
-                            }
-                            .buttonStyle(.bordered)
-                            .help("清空输入和输出")
-                            
-                            Button(action: {
-                                NSPasteboard.general.clearContents()
-                                NSPasteboard.general.setString(outputText, forType: .string)
-                            }) {
-                                Label("复制结果", systemImage: "doc.on.doc")
-                            }
-                            .buttonStyle(.bordered)
-                            .disabled(outputText.isEmpty)
-                            .help("将结果复制到剪贴板")
-                            
-                            Button(action: {
-                                let temp = inputText
-                                inputText = outputText
-                                outputText = temp
-                            }) {
-                                Label("互换", systemImage: "arrow.up.arrow.down")
-                            }
-                            .buttonStyle(.bordered)
-                            .help("交换输入和输出的位置")
-                            .disabled(outputText.isEmpty)
-                        }
-                        
-                        Spacer()
-                        
-                        // 右侧格式选择器
-                        Picker("输出格式", selection: $selectedOutputEncoding) {
-                            ForEach(outputEncodings, id: \.self) { encoding in
-                                Text(encoding).tag(encoding)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: 250)
+                    Button(action: {
+                        inputText = ""
+                        outputText = ""
+                    }) {
+                        Label("清空", systemImage: "trash")
                     }
-                    .padding(.horizontal)
+                    .buttonStyle(.bordered)
                     
-                    // 输出结果
-                    HStack {
-                        Label("处理结果", systemImage: "text.alignleft")
-                            .foregroundColor(.secondary)
-                            .font(.headline)
-                        
-                        Spacer()
-                        
-                        if !outputText.isEmpty {
-                            Text("处理完成")
-                                .foregroundColor(.green)
-                                .font(.caption)
-                        }
+                    Button(action: {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(outputText, forType: .string)
+                    }) {
+                        Label("复制结果", systemImage: "doc.on.doc")
                     }
+                    .buttonStyle(.bordered)
+                    .disabled(outputText.isEmpty)
                     
-                    Text(outputText)
-                        .font(.system(.body, design: .monospaced))
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
-                        .background(Color(NSColor.controlBackgroundColor))
-                        .cornerRadius(6)
+                    Button(action: {
+                        let temp = inputText
+                        inputText = outputText
+                        outputText = temp
+                    }) {
+                        Label("互换", systemImage: "arrow.up.arrow.down")
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(outputText.isEmpty)
+                    
+                    Spacer()
+                    
+                    Button(action: { decryptDES() }) {
+                        Label("解密", systemImage: "lock.open.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    
+                    SharedViews.EncodingPicker(
+                        title: "输出格式",
+                        selection: $selectedOutputEncoding,
+                        options: outputEncodings
+                    )
                 }
+                
+                SharedViews.ResultView(
+                    title: "处理结果",
+                    value: outputText,
+                    showStatus: true
+                )
             }
             
             Spacer()
@@ -265,31 +161,26 @@ struct DESView: View {
         .padding()
         .onChange(of: allValues) { _, _ in
             if !inputText.isEmpty {
-                do {
-                    outputText = try encryptDES(text: inputText, key: key, iv: iv)
-                } catch {
-                    outputText = "处理失败: \(error.localizedDescription)"
-                }
+                encryptDES()
             } else {
                 outputText = ""
             }
         }
-        .onAppear {
-            // 初始化时设置默认值的编码格式
-            if let defaultKeyData = key.data(using: .utf8) {
-                key = formatToEncoding(defaultKeyData, encoding: selectedKeyEncoding)
-            }
-            if let defaultIVData = iv.data(using: .utf8) {
-                iv = formatToEncoding(defaultIVData, encoding: selectedIVEncoding)
-            }
-            // 初始化时如果有输入则处理
-            if !inputText.isEmpty {
-                do {
-                    outputText = try encryptDES(text: inputText, key: key, iv: iv)
-                } catch {
-                    outputText = "处理失败: \(error.localizedDescription)"
-                }
-            }
+    }
+    
+    private func encryptDES() {
+        do {
+            outputText = try encryptDES(text: inputText, key: key, iv: iv)
+        } catch {
+            outputText = "加密失败: \(error.localizedDescription)"
+        }
+    }
+    
+    private func decryptDES() {
+        do {
+            outputText = try decryptDES(text: inputText, key: key, iv: iv)
+        } catch {
+            outputText = "解密失败: \(error.localizedDescription)"
         }
     }
     
@@ -372,11 +263,12 @@ struct DESView: View {
     }
     
     private func decryptDES(text: String, key: String, iv: String) throws -> String {
-        // 根据当前输出格式解析输入
         let data: Data
+        
+        // 根据选择的输出格式解析输入数据
         switch selectedOutputEncoding {
         case "HEX", "HEX(无空格)":
-            let hex = text.replacingOccurrences(of: " ", with: "").lowercased()
+            let hex = text.replacingOccurrences(of: " ", with: "")
             var tempData = Data()
             var temp = ""
             
@@ -395,6 +287,7 @@ struct DESView: View {
                 throw DESError.invalidInput
             }
             data = tempData
+            
         default: // Base64
             guard let base64Data = Data(base64Encoded: text) else {
                 throw DESError.invalidInput
@@ -429,7 +322,7 @@ struct DESView: View {
         case "PKCS7":
             options |= CCOptions(kCCOptionPKCS7Padding)
         case "Zero", "None":
-            if data.count % 8 != 0 {
+            if data.count % kCCBlockSizeDES != 0 {
                 throw DESError.invalidInput
             }
         default:
@@ -461,7 +354,11 @@ struct DESView: View {
         }
         
         let decryptedData = Data(buffer.prefix(numBytesDecrypted))
-        return String(data: decryptedData, encoding: .utf8) ?? ""
+        guard let decryptedString = String(data: decryptedData, encoding: .utf8) else {
+            throw DESError.decryptionFailed
+        }
+        
+        return decryptedString
     }
     
     private func generateRandomBytes(count: Int) -> Data {

@@ -18,9 +18,7 @@ struct HMACView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            // 输入输出区域
             SharedViews.GroupBoxView {
-                // 输入文本
                 SharedViews.InputTextEditor(
                     title: "输入文本",
                     placeholder: "输入需要处理的文本",
@@ -28,7 +26,6 @@ struct HMACView: View {
                     onChange: { generateHMAC() }
                 )
                 
-                // 密钥输入
                 SharedViews.KeyInput(
                     title: "密钥",
                     systemImage: "key",
@@ -37,17 +34,22 @@ struct HMACView: View {
                     help: "输入用于HMAC计算的密钥"
                 )
                 
-                // 控制按钮
-                SharedViews.ActionButtons(
-                    primaryAction: { generateHMAC() },
-                    primaryLabel: "生成",
-                    primaryIcon: "arrow.right.circle.fill",
-                    clearAction: {
+                HStack {
+                    Button(action: { generateHMAC() }) {
+                        Label("生成", systemImage: "arrow.right.circle.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    
+                    Button(action: {
                         inputText = ""
                         secretKey = ""
                         generateHMAC()
-                    },
-                    copyAction: {
+                    }) {
+                        Label("清空", systemImage: "trash")
+                    }
+                    .buttonStyle(.bordered)
+                    
+                    Button(action: {
                         let allResults = algorithms.compactMap { key in
                             if let value = hmacResults[key] {
                                 return "\(key): \(value)"
@@ -56,12 +58,13 @@ struct HMACView: View {
                         }.joined(separator: "\n")
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(allResults, forType: .string)
-                    },
-                    swapAction: nil,
-                    isOutputEmpty: hmacResults.isEmpty
-                )
+                    }) {
+                        Label("复制全部", systemImage: "doc.on.doc")
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(hmacResults.isEmpty)
+                }
                 
-                // 结果显示
                 VStack(alignment: .leading, spacing: 8) {
                     Label("HMAC 结果", systemImage: "key.fill")
                         .foregroundColor(.secondary)
@@ -69,31 +72,27 @@ struct HMACView: View {
                     
                     VStack(spacing: 0) {
                         ForEach(Array(algorithms.enumerated()), id: \.element) { index, key in
-                            VStack(alignment: .leading, spacing: 4) {
+                            HStack {
                                 Text(key)
+                                    .frame(width: 120, alignment: .leading)
                                     .foregroundColor(.secondary)
                                     .font(.system(.body, design: .rounded))
                                 
-                                HStack(alignment: .top) {
-                                    Text(hmacResults[key] ?? "")
-                                        .font(.system(.body, design: .monospaced))
-                                        .textSelection(.enabled)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .lineLimit(2)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                    
-                                    Button(action: {
-                                        if let value = hmacResults[key] {
-                                            NSPasteboard.general.clearContents()
-                                            NSPasteboard.general.setString(value, forType: .string)
-                                        }
-                                    }) {
-                                        Image(systemName: "doc.on.doc")
-                                            .foregroundColor(.secondary)
+                                Text(hmacResults[key] ?? "")
+                                    .font(.system(.body, design: .monospaced))
+                                    .textSelection(.enabled)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                
+                                Button(action: {
+                                    if let value = hmacResults[key] {
+                                        NSPasteboard.general.clearContents()
+                                        NSPasteboard.general.setString(value, forType: .string)
                                     }
-                                    .buttonStyle(.borderless)
-                                    .disabled(hmacResults[key]?.isEmpty ?? true)
+                                }) {
+                                    Label("复制", systemImage: "doc.on.doc")
                                 }
+                                .buttonStyle(.borderless)
+                                .disabled(hmacResults[key]?.isEmpty ?? true)
                             }
                             .padding(.horizontal)
                             .padding(.vertical, 8)
@@ -109,9 +108,6 @@ struct HMACView: View {
             Spacer()
         }
         .padding()
-        .onAppear {
-            generateHMAC()
-        }
     }
     
     private func generateHMAC() {
