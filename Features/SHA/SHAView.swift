@@ -114,14 +114,14 @@ struct SHAView: View {
             Spacer()
         }
         .padding()
+        .onChange(of: inputText, { _, newValue in
+            saveCurrentData()
+        })
+        .onChange(of: selectedAlgorithm, { _, newValue in
+            saveCurrentData()
+        })
         .onAppear {
             generateSHA()
-        }
-        .onChange(of: inputText) { _ in
-            saveCurrentData()
-        }
-        .onChange(of: selectedAlgorithm) { _ in
-            saveCurrentData()
         }
     }
     

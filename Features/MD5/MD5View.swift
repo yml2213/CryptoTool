@@ -115,9 +115,9 @@ struct MD5View: View {
         .onAppear {
             generateMD5()
         }
-        .onChange(of: inputText) { _ in
+        .onChange(of: inputText, { _, newValue in
             saveCurrentData()
-        }
+        })
     }
     
     private func generateMD5() {

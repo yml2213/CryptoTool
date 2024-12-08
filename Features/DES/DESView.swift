@@ -169,20 +169,18 @@ struct DESView: View {
             Spacer()
         }
         .padding()
-        .onChange(of: allValues) { _, _ in
+        .onChange(of: allValues, { _, newValue in
             if !inputText.isEmpty {
                 encryptDES()
-            } else {
-                outputText = ""
             }
-        }
-        .onChange(of: inputText) { _ in
+        })
+        .onChange(of: inputText) {
             saveCurrentData()
         }
-        .onChange(of: key) { _ in
+        .onChange(of: key) {
             saveCurrentData()
         }
-        .onChange(of: iv) { _ in
+        .onChange(of: iv) {
             saveCurrentData()
         }
     }
@@ -222,7 +220,7 @@ struct DESView: View {
             throw DESError.invalidIV
         }
         
-        // 设置��密选项
+        // 设置加密选项
         var options: CCOptions = 0
         
         // 设置模式

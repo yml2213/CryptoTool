@@ -125,13 +125,13 @@ struct HMACView: View {
             Spacer()
         }
         .padding()
-        .onChange(of: allValues) { _, _ in
+        .onChange(of: allValues, { _, newValue in
             generateHMAC()
-        }
-        .onChange(of: inputText) { _ in
+        })
+        .onChange(of: inputText) {
             saveCurrentData()
         }
-        .onChange(of: secretKey) { _ in
+        .onChange(of: secretKey) {
             saveCurrentData()
         }
         .onAppear {

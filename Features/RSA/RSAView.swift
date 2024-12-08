@@ -319,7 +319,7 @@ struct RSAView: View {
                 }
             }
         )
-        .onChange(of: allProcessValues) { _, _ in
+        .onChange(of: allProcessValues, { _, newValue in
             if !inputText.isEmpty {
                 do {
                     let publicKey = try RSACrypto.parsePublicKey(publicKey, keySize: selectedKeySize)
@@ -334,14 +334,14 @@ struct RSAView: View {
             } else {
                 outputText = ""
             }
-        }
-        .onChange(of: inputText) { _ in
+        })
+        .onChange(of: inputText) {
             saveCurrentData()
         }
-        .onChange(of: publicKey) { _ in
+        .onChange(of: publicKey) {
             saveCurrentData()
         }
-        .onChange(of: privateKey) { _ in
+        .onChange(of: privateKey) {
             saveCurrentData()
         }
     }

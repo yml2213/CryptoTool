@@ -64,10 +64,10 @@ struct Base64View: View {
             Spacer()
         }
         .padding()
-        .onChange(of: inputText) { _, _ in
+        .onChange(of: inputText, { _, newValue in
             encode()
             saveCurrentData()
-        }
+        })
     }
     
     private func encode() {

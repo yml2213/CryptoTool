@@ -35,9 +35,9 @@ public struct SharedViews {
                     .padding(8)
                     .background(Color(NSColor.textBackgroundColor))
                     .cornerRadius(6)
-                    .onChange(of: text) { _, _ in
+                    .onChange(of: text, { _, newValue in
                         onChange?()
-                    }
+                    })
             }
         }
     }
@@ -110,7 +110,7 @@ public struct SharedViews {
                         Label("清空", systemImage: "trash")
                     }
                     .buttonStyle(.bordered)
-                    .help("清空输入和输出")
+                    .help("清空输入输出")
                     
                     Button(action: copyAction) {
                         Label("复制结果", systemImage: "doc.on.doc")

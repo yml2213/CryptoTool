@@ -22,7 +22,7 @@ struct AESView: View {
     private let outputEncodings = ["Base64", "HEX", "HEX(无空格)"]
     
     private let tooltips = [
-        "ecb": "ECB模式安��性较低，不推荐在实际应用中使用",
+        "ecb": "ECB模式安全性较低，不推荐在实际应用中使用",
         "cbc": "CBC模式需要初始向量(IV)，安全性较高",
         "key128": "128位密钥(16字节)，适用于大多数场景",
         "key192": "192位密钥(24字节)，提供更高安全性",
@@ -167,31 +167,43 @@ struct AESView: View {
                 )
                 
                 HStack {
-                    SharedViews.ActionButtons(
-                        primaryAction: {
-                            do {
-                                outputText = try encryptAES(text: inputText, key: key, iv: iv)
-                            } catch {
-                                outputText = "加密失败: \(error.localizedDescription)"
-                            }
-                        },
-                        primaryLabel: "加密",
-                        primaryIcon: "lock.fill",
-                        clearAction: {
-                            inputText = ""
-                            outputText = ""
-                        },
-                        copyAction: {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(outputText, forType: .string)
-                        },
-                        swapAction: {
-                            let temp = inputText
-                            inputText = outputText
-                            outputText = temp
-                        },
-                        isOutputEmpty: outputText.isEmpty
-                    )
+                    Button(action: {
+                        do {
+                            outputText = try encryptAES(text: inputText, key: key, iv: iv)
+                        } catch {
+                            outputText = "加密失败: \(error.localizedDescription)"
+                        }
+                    }) {
+                        Label("加密", systemImage: "lock.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    
+                    Button(action: {
+                        inputText = ""
+                        outputText = ""
+                    }) {
+                        Label("清空", systemImage: "trash")
+                    }
+                    .buttonStyle(.bordered)
+                    
+                    Button(action: {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(outputText, forType: .string)
+                    }) {
+                        Label("复制结果", systemImage: "doc.on.doc")
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(outputText.isEmpty)
+                    
+                    Button(action: {
+                        let temp = inputText
+                        inputText = outputText
+                        outputText = temp
+                    }) {
+                        Label("互换", systemImage: "arrow.up.arrow.down")
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(outputText.isEmpty)
                     
                     Spacer()
                     
@@ -223,7 +235,7 @@ struct AESView: View {
             Spacer()
         }
         .padding()
-        .onChange(of: allValues) { _, _ in
+        .onChange(of: allValues, { _, newValue in
             if !inputText.isEmpty {
                 do {
                     outputText = try encryptAES(text: inputText, key: key, iv: iv)
@@ -233,20 +245,20 @@ struct AESView: View {
             } else {
                 outputText = ""
             }
-        }
-        .onChange(of: inputText) { _ in
+        })
+        .onChange(of: inputText) {
             saveCurrentData()
         }
-        .onChange(of: key) { _ in
+        .onChange(of: key) {
             saveCurrentData()
         }
-        .onChange(of: iv) { _ in
+        .onChange(of: iv) {
             saveCurrentData()
         }
-        .onChange(of: selectedMode) { _ in
+        .onChange(of: selectedMode) {
             saveCurrentData()
         }
-        .onChange(of: selectedKeySize) { _ in
+        .onChange(of: selectedKeySize) {
             saveCurrentData()
         }
     }
@@ -387,12 +399,12 @@ struct AESView: View {
             break
         }
         
-        // 创建输���缓冲区
+        // 创建输出缓冲区
         let bufferSize = size_t(data.count + kCCBlockSizeAES128)
         var buffer = [UInt8](repeating: 0, count: bufferSize)
         var numBytesEncrypted: size_t = 0
         
-        // 选择AES算法
+        // ���择AES算法
         let algorithm: CCAlgorithm = UInt32(kCCAlgorithmAES)
         
         let cryptStatus = keyData.withUnsafeBytes { keyBytes in
