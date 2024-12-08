@@ -4,16 +4,15 @@ import CommonCrypto
 
 struct AESView: View {
     @State private var inputText: String = ""
+    @State private var outputText: String = ""
     @State private var key: String = "0123456789abcdef"  // 16字节默认密钥
     @State private var iv: String = "0123456789abcdef"   // 16字节默认IV
-    @State private var outputText: String = ""
-    @State private var isEncrypting: Bool = true
     @State private var selectedMode: String = "CBC"      // 默认CBC模式
     @State private var selectedKeySize: Int = 128        // 默认128位
     @State private var selectedPadding: String = "PKCS7" // 默认PKCS7
     @State private var selectedKeyEncoding: String = "UTF8"
     @State private var selectedIVEncoding: String = "UTF8"
-    @State private var selectedOutputEncoding: String = "Base64" // 添加输出格式选择
+    @State private var selectedOutputEncoding: String = "Base64"
     @Environment(\.colorScheme) var colorScheme
     
     private let modes = ["ECB", "CBC"]
@@ -38,7 +37,6 @@ struct AESView: View {
             inputText,
             key,
             iv,
-            isEncrypting.description,
             selectedMode,
             selectedKeySize.description,
             selectedPadding,
@@ -52,21 +50,13 @@ struct AESView: View {
         VStack(spacing: 16) {
             // 模式选择
             HStack(spacing: 20) {
-                Picker("操作", selection: $isEncrypting) {
-                    Text("加密").tag(true)
-                    Text("解密").tag(false)
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 200)
-                .help(isEncrypting ? "将明文加密为密文" : "将密文解密为明文")
-                
                 Picker("密钥长度", selection: $selectedKeySize) {
                     ForEach(keySizes, id: \.self) { size in
                         Text("\(size)位").tag(size)
                     }
                 }
                 .pickerStyle(.segmented)
-                .help("选择AES密钥长度：\(tooltips["key\(selectedKeySize)"] ?? "")")
+                .help("选择AES密钥长度")
                 
                 Picker("加密模式", selection: $selectedMode) {
                     ForEach(modes, id: \.self) { mode in
@@ -86,17 +76,96 @@ struct AESView: View {
             }
             .padding(.horizontal)
             
-            // 输入区域
+            // 密钥和IV设置区域
+            GroupBox {
+                VStack(alignment: .leading, spacing: 12) {
+                    // 密钥部分
+                    HStack {
+                        Label("密钥 (\(selectedKeySize/8)字节)", systemImage: "key")
+                            .foregroundColor(.secondary)
+                            .font(.headline)
+                        
+                        Text("当前编码: \(selectedKeyEncoding)")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            let randomKey = generateRandomBytes(count: selectedKeySize/8)
+                            key = formatToEncoding(randomKey, encoding: selectedKeyEncoding)
+                        }) {
+                            Label("生成随机密钥", systemImage: "wand.and.stars")
+                        }
+                        .buttonStyle(.bordered)
+                        .help("生成一个随机的\(selectedKeySize/8)字节密钥")
+                        
+                        Picker("密钥编码", selection: $selectedKeyEncoding) {
+                            ForEach(encodings, id: \.self) { encoding in
+                                Text(encoding).tag(encoding)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 250)
+                        .help("选择密钥的编码格式")
+                    }
+                    
+                    TextField("请输入密钥", text: $key)
+                        .textFieldStyle(.roundedBorder)
+                        .help("输入\(selectedKeySize/8)字节的密钥")
+                    
+                    // IV部分
+                    VStack(spacing: 12) {
+                        HStack {
+                            Label("初始向量(IV) (16字节)", systemImage: "number")
+                                .foregroundColor(.secondary)
+                                .font(.headline)
+                            
+                            Text("当前编码: \(selectedIVEncoding)")
+                                .foregroundColor(.secondary)
+                                .font(.caption)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                let randomIV = generateRandomBytes(count: 16)
+                                iv = formatToEncoding(randomIV, encoding: selectedIVEncoding)
+                            }) {
+                                Label("生成随机IV", systemImage: "wand.and.stars")
+                            }
+                            .buttonStyle(.bordered)
+                            .help("生成一个随机的16字节IV")
+                            
+                            Picker("IV编码", selection: $selectedIVEncoding) {
+                                ForEach(encodings, id: \.self) { encoding in
+                                    Text(encoding).tag(encoding)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                            .frame(width: 250)
+                            .help("选择IV的编码格式")
+                        }
+                        
+                        TextField("请输入IV", text: $iv)
+                            .textFieldStyle(.roundedBorder)
+                            .help("输入16字节的初始向量")
+                    }
+                    .opacity(selectedMode == "ECB" ? 0 : 1)
+                    .allowsHitTesting(selectedMode != "ECB")
+                }
+            }
+            
+            // 输入输出区域
             GroupBox {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Label(isEncrypting ? "明文" : "密文", systemImage: "text.alignleft")
+                        Label("输入文本", systemImage: "text.alignleft")
                             .foregroundColor(.secondary)
                             .font(.headline)
                         
                         Spacer()
                         
-                        Text("输入需要\(isEncrypting ? "加密" : "解密")的文本")
+                        Text("输入需要处理的文本")
                             .foregroundColor(.secondary)
                             .font(.caption)
                     }
@@ -108,137 +177,81 @@ struct AESView: View {
                         .background(Color(NSColor.textBackgroundColor))
                         .cornerRadius(6)
                     
-                    // 固定高度的容器
-                    VStack(alignment: .leading, spacing: 12) {
-                        // 密钥部分
-                        HStack {
-                            Label("密钥 (\(selectedKeySize/8)字节)", systemImage: "key")
-                                .foregroundColor(.secondary)
-                                .font(.headline)
-                            
-                            Text("当前编码: \(selectedKeyEncoding)")
-                                .foregroundColor(.secondary)
-                                .font(.caption)
-                            
-                            Spacer()
+                    // 控制按钮
+                    HStack(spacing: 12) {
+                        // 左侧按钮组
+                        HStack(spacing: 12) {
+                            Button(action: {
+                                do {
+                                    outputText = try encryptAES(text: inputText, key: key, iv: iv)
+                                } catch {
+                                    outputText = "加密失败: \(error.localizedDescription)"
+                                }
+                            }) {
+                                Label("加密", systemImage: "lock.fill")
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .help("使用当前设置加密数据")
                             
                             Button(action: {
-                                let randomKey = generateRandomBytes(count: selectedKeySize/8)
-                                key = formatToEncoding(randomKey, encoding: selectedKeyEncoding)
+                                do {
+                                    outputText = try decryptAES(text: inputText, key: key, iv: iv)
+                                } catch {
+                                    outputText = "解密失败: \(error.localizedDescription)"
+                                }
                             }) {
-                                Label("生成随机密钥", systemImage: "wand.and.stars")
+                                Label("解密", systemImage: "lock.open.fill")
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .help("使用当前设置解密数据")
+                            
+                            Button(action: {
+                                inputText = ""
+                                outputText = ""
+                            }) {
+                                Label("清空", systemImage: "trash")
                             }
                             .buttonStyle(.bordered)
-                            .help("生成一个随机的\(selectedKeySize)位密钥")
+                            .help("清空输入和输出")
                             
-                            Picker("密钥编码", selection: $selectedKeyEncoding) {
-                                ForEach(encodings, id: \.self) { encoding in
-                                    Text(encoding).tag(encoding)
-                                }
+                            Button(action: {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(outputText, forType: .string)
+                            }) {
+                                Label("复制结果", systemImage: "doc.on.doc")
                             }
-                            .pickerStyle(.segmented)
-                            .frame(width: 250)
-                            .help("选择密钥的编码格式")
+                            .buttonStyle(.bordered)
+                            .disabled(outputText.isEmpty)
+                            .help("将结果复制到剪贴板")
+                            
+                            Button(action: {
+                                let temp = inputText
+                                inputText = outputText
+                                outputText = temp
+                            }) {
+                                Label("互换", systemImage: "arrow.up.arrow.down")
+                            }
+                            .buttonStyle(.bordered)
+                            .help("交换输入和输出的位置")
+                            .disabled(outputText.isEmpty)
                         }
                         
-                        TextField("请输入密钥", text: $key)
-                            .textFieldStyle(.roundedBorder)
-                            .help("输入\(selectedKeySize/8)字节的密钥")
+                        Spacer()
                         
-                        // IV部分
-                        VStack(spacing: 12) {
-                            HStack {
-                                Label("初始向量(IV) (16字节)", systemImage: "number")
-                                    .foregroundColor(.secondary)
-                                    .font(.headline)
-                                
-                                Text("当前编码: \(selectedIVEncoding)")
-                                    .foregroundColor(.secondary)
-                                    .font(.caption)
-                                
-                                Spacer()
-                                
-                                Button(action: {
-                                    let randomIV = generateRandomBytes(count: 16)
-                                    iv = formatToEncoding(randomIV, encoding: selectedIVEncoding)
-                                }) {
-                                    Label("生成随机IV", systemImage: "wand.and.stars")
-                                }
-                                .buttonStyle(.bordered)
-                                .help("生成一个随机的16字节IV")
-                                
-                                Picker("IV编码", selection: $selectedIVEncoding) {
-                                    ForEach(encodings, id: \.self) { encoding in
-                                        Text(encoding).tag(encoding)
-                                    }
-                                }
-                                .pickerStyle(.segmented)
-                                .frame(width: 250)
-                                .help("选择IV的编码格式")
+                        // 右侧格式选择器
+                        Picker("输出格式", selection: $selectedOutputEncoding) {
+                            ForEach(outputEncodings, id: \.self) { encoding in
+                                Text(encoding).tag(encoding)
                             }
-                            
-                            TextField("请输入IV", text: $iv)
-                                .textFieldStyle(.roundedBorder)
-                                .help("输入16字节的初始向量")
                         }
-                        .opacity(selectedMode == "ECB" ? 0 : 1)
-                        .allowsHitTesting(selectedMode != "ECB")
+                        .pickerStyle(.segmented)
+                        .frame(width: 250)
                     }
-                    .frame(height: 140)
-                }
-            }
-            
-            // 控制按钮
-            HStack(spacing: 12) {
-                // 左侧按钮组
-                HStack(spacing: 12) {
-                    Button(action: { processAES() }) {
-                        Label(isEncrypting ? "加密" : "解密", 
-                              systemImage: "arrow.right.circle.fill")
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .help(isEncrypting ? "使用当前设置加密数据" : "使用当前设置解密数据")
+                    .padding(.horizontal)
                     
-                    Button(action: {
-                        inputText = ""
-                        outputText = ""
-                        key = ""
-                        iv = ""
-                    }) {
-                        Label("清空", systemImage: "trash")
-                    }
-                    .buttonStyle(.bordered)
-                    .help("清空所有输入和输出")
-                    
-                    Button(action: {
-                        NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(outputText, forType: .string)
-                    }) {
-                        Label("复制结果", systemImage: "doc.on.doc")
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(outputText.isEmpty)
-                    .help("将结果复制到剪贴板")
-                }
-                
-                Spacer()
-                
-                // 右侧格式选择器
-                Picker("输出格式", selection: $selectedOutputEncoding) {
-                    ForEach(outputEncodings, id: \.self) { encoding in
-                        Text(encoding).tag(encoding)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 250)
-            }
-            .padding(.horizontal)
-            
-            // 输出区域
-            GroupBox {
-                VStack(alignment: .leading, spacing: 8) {
+                    // 输出结果
                     HStack {
-                        Label(isEncrypting ? "密文" : "明文", systemImage: "key.fill")
+                        Label("处理结果", systemImage: "text.alignleft")
                             .foregroundColor(.secondary)
                             .font(.headline)
                         
@@ -314,7 +327,7 @@ struct AESView: View {
         }
     }
     
-    // 添加编码转换函数
+    // 添加��码转换函数
     private func convertFromEncoding(_ text: String, encoding: String) throws -> Data {
         switch encoding {
         case "UTF8":
@@ -363,11 +376,7 @@ struct AESView: View {
         
         // 实现AES加密/解密逻辑
         do {
-            if isEncrypting {
-                outputText = try encryptAES(text: inputText, key: key, iv: iv)
-            } else {
-                outputText = try decryptAES(text: inputText, key: key, iv: iv)
-            }
+            outputText = try encryptAES(text: inputText, key: key, iv: iv)
         } catch {
             outputText = "处理失败: \(error.localizedDescription)"
         }
@@ -494,7 +503,7 @@ struct AESView: View {
         let keyData = try convertFromEncoding(key, encoding: selectedKeyEncoding)
         let ivData = selectedMode != "ECB" ? try convertFromEncoding(iv, encoding: selectedIVEncoding) : Data(count: kCCBlockSizeAES128)
         
-        // 检查密钥���度
+        // 检查密钥长度
         guard keyData.count == selectedKeySize / 8 else {
             throw AESError.invalidKeySize
         }
