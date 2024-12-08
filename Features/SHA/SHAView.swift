@@ -6,7 +6,6 @@ struct SHAView: View {
     @State private var shaResults: [String: String] = [:]
     @Environment(\.colorScheme) var colorScheme
     
-    // 定义显示顺序
     private let resultOrder = [
         "SHA1",
         "SHA256", 
@@ -16,62 +15,40 @@ struct SHAView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            // 输入区域
-            GroupBox {
-                VStack(alignment: .leading, spacing: 8) {
-                    Label("输入文本", systemImage: "text.alignleft")
-                        .foregroundColor(.secondary)
-                        .font(.headline)
-                    
-                    TextEditor(text: $inputText)
-                        .font(.system(.body, design: .monospaced))
-                        .frame(height: 80)
-                        .padding(8)
-                        .background(Color(NSColor.textBackgroundColor))
-                        .cornerRadius(6)
-                        .onChange(of: inputText) { _, _ in
-                            generateSHA()
-                        }
-                }
-            }
-            .frame(height: 140)
-            
-            // 控制按钮
-            HStack(spacing: 12) {
-                Button(action: { generateSHA() }) {
-                    Label("生成", systemImage: "arrow.right.circle.fill")
-                }
-                .buttonStyle(.borderedProminent)
+            // 输入输出区域
+            SharedViews.GroupBoxView {
+                // 输入区域
+                SharedViews.InputTextEditor(
+                    title: "输入文本",
+                    placeholder: "输入需要处理的文本",
+                    text: $inputText,
+                    onChange: { generateSHA() }
+                )
                 
-                Button(action: {
-                    inputText = ""
-                    generateSHA()
-                }) {
-                    Label("清空", systemImage: "trash")
-                }
-                .buttonStyle(.bordered)
+                // 控制按钮
+                SharedViews.ActionButtons(
+                    primaryAction: { generateSHA() },
+                    primaryLabel: "生成",
+                    primaryIcon: "arrow.right.circle.fill",
+                    clearAction: {
+                        inputText = ""
+                        generateSHA()
+                    },
+                    copyAction: {
+                        let allResults = resultOrder.compactMap { key in
+                            if let value = shaResults[key] {
+                                return "\(key): \(value)"
+                            }
+                            return nil
+                        }.joined(separator: "\n")
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(allResults, forType: .string)
+                    },
+                    swapAction: nil,
+                    isOutputEmpty: shaResults.isEmpty
+                )
                 
-                Spacer()
-                
-                Button(action: {
-                    let allResults = resultOrder.compactMap { key in
-                        if let value = shaResults[key] {
-                            return "\(key): \(value)"
-                        }
-                        return nil
-                    }.joined(separator: "\n")
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(allResults, forType: .string)
-                }) {
-                    Label("复制全部", systemImage: "doc.on.doc")
-                }
-                .buttonStyle(.bordered)
-                .disabled(shaResults.isEmpty)
-            }
-            .padding(.horizontal)
-            
-            // 输出区域
-            GroupBox {
+                // 结果显示
                 VStack(alignment: .leading, spacing: 8) {
                     Label("SHA 结果", systemImage: "key.fill")
                         .foregroundColor(.secondary)
@@ -113,7 +90,6 @@ struct SHAView: View {
                         }
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 6))
-                    .padding(.vertical, 4)
                 }
             }
             

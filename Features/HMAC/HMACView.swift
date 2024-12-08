@@ -18,72 +18,50 @@ struct HMACView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            // 输入区域
-            GroupBox {
-                VStack(alignment: .leading, spacing: 12) {
-                    Label("输入文本", systemImage: "text.alignleft")
-                        .foregroundColor(.secondary)
-                        .font(.headline)
-                    
-                    TextEditor(text: $inputText)
-                        .font(.system(.body, design: .monospaced))
-                        .frame(height: 80)
-                        .padding(8)
-                        .background(Color(NSColor.textBackgroundColor))
-                        .cornerRadius(6)
-                        .onChange(of: inputText) { _, _ in
-                            generateHMAC()
-                        }
-                    
-                    Label("密钥", systemImage: "key")
-                        .foregroundColor(.secondary)
-                        .font(.headline)
-                    
-                    TextField("请输入密钥", text: $secretKey)
-                        .textFieldStyle(.roundedBorder)
-                        .onChange(of: secretKey) { _, _ in
-                            generateHMAC()
-                        }
-                }
-            }
-            
-            // 控制按钮
-            HStack(spacing: 12) {
-                Button(action: { generateHMAC() }) {
-                    Label("生成", systemImage: "arrow.right.circle.fill")
-                }
-                .buttonStyle(.borderedProminent)
+            // 输入输出区域
+            SharedViews.GroupBoxView {
+                // 输入文本
+                SharedViews.InputTextEditor(
+                    title: "输入文本",
+                    placeholder: "输入需要处理的文本",
+                    text: $inputText,
+                    onChange: { generateHMAC() }
+                )
                 
-                Button(action: {
-                    inputText = ""
-                    secretKey = ""
-                    generateHMAC()
-                }) {
-                    Label("清空", systemImage: "trash")
-                }
-                .buttonStyle(.bordered)
+                // 密钥输入
+                SharedViews.KeyInput(
+                    title: "密钥",
+                    systemImage: "key",
+                    text: $secretKey,
+                    placeholder: "请输入密钥",
+                    help: "输入用于HMAC计算的密钥"
+                )
                 
-                Spacer()
+                // 控制按钮
+                SharedViews.ActionButtons(
+                    primaryAction: { generateHMAC() },
+                    primaryLabel: "生成",
+                    primaryIcon: "arrow.right.circle.fill",
+                    clearAction: {
+                        inputText = ""
+                        secretKey = ""
+                        generateHMAC()
+                    },
+                    copyAction: {
+                        let allResults = algorithms.compactMap { key in
+                            if let value = hmacResults[key] {
+                                return "\(key): \(value)"
+                            }
+                            return nil
+                        }.joined(separator: "\n")
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(allResults, forType: .string)
+                    },
+                    swapAction: nil,
+                    isOutputEmpty: hmacResults.isEmpty
+                )
                 
-                Button(action: {
-                    let allResults = algorithms.compactMap { key in
-                        if let value = hmacResults[key] {
-                            return "\(key): \(value)"
-                        }
-                        return nil
-                    }.joined(separator: "\n")
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(allResults, forType: .string)
-                }) {
-                    Label("复制全部", systemImage: "doc.on.doc")
-                }
-                .buttonStyle(.bordered)
-                .disabled(hmacResults.isEmpty)
-            }
-            .padding(.horizontal)
-            
-            // 输出区域
-            GroupBox {
+                // 结果显示
                 VStack(alignment: .leading, spacing: 8) {
                     Label("HMAC 结果", systemImage: "key.fill")
                         .foregroundColor(.secondary)

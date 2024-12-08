@@ -16,65 +16,42 @@ struct MD5View: View {
         "16位 反转"
     ]
     
-    
     var body: some View {
         VStack(spacing: 16) {
-            // 输入区域 - 固定高度
-            GroupBox {
-                VStack(alignment: .leading, spacing: 8) {
-                    Label("输入文本", systemImage: "text.alignleft")
-                        .foregroundColor(.secondary)
-                        .font(.headline)
-                    
-                    TextEditor(text: $inputText)
-                        .font(.system(.body, design: .monospaced))
-                        .frame(height: 80) // 固定高度
-                        .padding(8)
-                        .background(Color(NSColor.textBackgroundColor))
-                        .cornerRadius(6)
-                        .onChange(of: inputText) { _, _ in
-                            generateMD5()
-                        }
-                }
-            }
-            .frame(height: 140) // 固定整个输入区域的高度
-            
-            // 控制按钮
-            HStack(spacing: 12) {
-                Button(action: { generateMD5() }) {
-                    Label("生成", systemImage: "arrow.right.circle.fill")
-                }
-                .buttonStyle(.borderedProminent)
+            // 输入输出区域
+            SharedViews.GroupBoxView {
+                // 输入区域
+                SharedViews.InputTextEditor(
+                    title: "输入文本",
+                    placeholder: "输入需要处理的文本",
+                    text: $inputText,
+                    onChange: { generateMD5() }
+                )
                 
-                Button(action: {
-                    inputText = ""
-                    generateMD5()
-                }) {
-                    Label("清空", systemImage: "trash")
-                }
-                .buttonStyle(.bordered)
+                // 控制按钮
+                SharedViews.ActionButtons(
+                    primaryAction: { generateMD5() },
+                    primaryLabel: "生成",
+                    primaryIcon: "arrow.right.circle.fill",
+                    clearAction: {
+                        inputText = ""
+                        generateMD5()
+                    },
+                    copyAction: {
+                        let allResults = resultOrder.compactMap { key in
+                            if let value = md5Results[key] {
+                                return "\(key): \(value)"
+                            }
+                            return nil
+                        }.joined(separator: "\n")
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(allResults, forType: .string)
+                    },
+                    swapAction: nil,
+                    isOutputEmpty: md5Results.isEmpty
+                )
                 
-                Spacer()
-                
-                Button(action: {
-                    let allResults = resultOrder.compactMap { key in
-                        if let value = md5Results[key] {
-                            return "\(key): \(value)"
-                        }
-                        return nil
-                    }.joined(separator: "\n")
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(allResults, forType: .string)
-                }) {
-                    Label("复制全部", systemImage: "doc.on.doc")
-                }
-                .buttonStyle(.bordered)
-                .disabled(md5Results.isEmpty)
-            }
-            .padding(.horizontal)
-            
-            // 输出区域 - 斑马纹理
-            GroupBox {
+                // 结果显示
                 VStack(alignment: .leading, spacing: 8) {
                     Label("MD5 结果", systemImage: "key.fill")
                         .foregroundColor(.secondary)
@@ -113,11 +90,10 @@ struct MD5View: View {
                         }
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 6))
-                    .padding(.vertical, 4)
                 }
             }
             
-            Spacer() // 让内容固定在顶部
+            Spacer()
         }
         .padding()
         .onAppear {
