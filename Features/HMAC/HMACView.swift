@@ -4,7 +4,7 @@ import CommonCrypto
 
 struct HMACView: View {
     @State private var inputText: String = ""
-    @State private var secretKey: String = ""
+    @State private var secretKey: String = "01234567"
     @State private var hmacResults: [String: String] = [:]
     @Environment(\.colorScheme) var colorScheme
     
@@ -15,6 +15,11 @@ struct HMACView: View {
         "HMAC-SHA384",
         "HMAC-SHA512"
     ]
+    
+    // 添加计算属性用于监听输入变化
+    private var allValues: String {
+        [inputText, secretKey].joined()
+    }
     
     var body: some View {
         VStack(spacing: 16) {
@@ -108,6 +113,14 @@ struct HMACView: View {
             Spacer()
         }
         .padding()
+        // 添加onChange处理器
+        .onChange(of: allValues) { _, _ in
+            generateHMAC()
+        }
+        // 添加onAppear处理器
+        .onAppear {
+            generateHMAC()
+        }
     }
     
     private func generateHMAC() {
