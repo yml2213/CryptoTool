@@ -18,7 +18,7 @@ struct DESView: View {
     private let modes = ["ECB", "CBC"]
     private let paddings = ["PKCS7", "Zero", "None"]
     private let encodings = ["UTF8", "HEX", "Base64"]
-    private let outputEncodings = ["Base64", "HEX"] // 输出格式选项
+    private let outputEncodings = ["Base64", "HEX", "HEX(无空格)"] // 输出格式选项
     
     private let tooltips = [
         "ecb": "ECB模式安全性较低，不推荐在实际应用中使用",
@@ -37,7 +37,8 @@ struct DESView: View {
             selectedMode,
             selectedPadding,
             selectedKeyEncoding,
-            selectedIVEncoding
+            selectedIVEncoding,
+            selectedOutputEncoding
         ].joined()
     }
     
@@ -164,7 +165,7 @@ struct DESView: View {
                             
                             TextField("请输入IV", text: $iv)
                                 .textFieldStyle(.roundedBorder)
-                                .help("输入8字节的初始向量")
+                                .help("输入8字节的初��向量")
                         }
                         .opacity(selectedMode == "ECB" ? 0 : 1)
                         .allowsHitTesting(selectedMode != "ECB")
@@ -175,45 +176,47 @@ struct DESView: View {
             
             // 控制按钮
             HStack(spacing: 12) {
-                Button(action: { processDES() }) {
-                    Label(isEncrypting ? "加密" : "解密", 
-                          systemImage: "arrow.right.circle.fill")
+                // 左侧按钮组
+                HStack(spacing: 12) {
+                    Button(action: { processDES() }) {
+                        Label(isEncrypting ? "加密" : "解密", 
+                              systemImage: "arrow.right.circle.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .help(isEncrypting ? "使用当前设置加密数据" : "使用当前设置解密数据")
+                    
+                    Button(action: {
+                        inputText = ""
+                        outputText = ""
+                        key = ""
+                        iv = ""
+                    }) {
+                        Label("清空", systemImage: "trash")
+                    }
+                    .buttonStyle(.bordered)
+                    .help("清空所有输入和输出")
+                    
+                    Button(action: {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(outputText, forType: .string)
+                    }) {
+                        Label("复制结果", systemImage: "doc.on.doc")
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(outputText.isEmpty)
+                    .help("将结果复制到剪贴板")
                 }
-                .buttonStyle(.borderedProminent)
-                .help(isEncrypting ? "使用当前设置加密数据" : "使用当前设置解密数据")
-                
-                Button(action: {
-                    inputText = ""
-                    outputText = ""
-                    key = ""
-                    iv = ""
-                }) {
-                    Label("清空", systemImage: "trash")
-                }
-                .buttonStyle(.bordered)
-                .help("清空所有输入和输出")
                 
                 Spacer()
                 
-                // 添加输出格式选择器
+                // 右侧格式选择器
                 Picker("输出格式", selection: $selectedOutputEncoding) {
                     ForEach(outputEncodings, id: \.self) { encoding in
                         Text(encoding).tag(encoding)
                     }
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 150)
-                .help("选择加密结果的输出格式")
-                
-                Button(action: {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(outputText, forType: .string)
-                }) {
-                    Label("复制结果", systemImage: "doc.on.doc")
-                }
-                .buttonStyle(.bordered)
-                .disabled(outputText.isEmpty)
-                .help("将结果复制到剪贴板")
+                .frame(width: 250)
             }
             .padding(.horizontal)
             
@@ -390,15 +393,9 @@ struct DESView: View {
         // 根据选择的输出格式返回结果
         switch selectedOutputEncoding {
         case "HEX":
-            let hexString = encryptedData.map { String(format: "%02x", $0) }.joined()
-            var result = ""
-            for (index, char) in hexString.enumerated() {
-                result.append(char)
-                if index % 2 == 1 && index < hexString.count - 1 {
-                    result.append(" ")
-                }
-            }
-            return result
+            return encryptedData.map { String(format: "%02x", $0) }.joined(separator: " ")
+        case "HEX(无空格)":
+            return encryptedData.map { String(format: "%02x", $0) }.joined()
         default: // Base64
             return encryptedData.base64EncodedString()
         }
@@ -408,21 +405,26 @@ struct DESView: View {
         // 根据当前输出格式解析输入
         let data: Data
         switch selectedOutputEncoding {
-        case "HEX":
+        case "HEX", "HEX(无空格)":
             let hex = text.replacingOccurrences(of: " ", with: "").lowercased()
-            var data = Data()
-            var index = hex.startIndex
-            while index < hex.endIndex {
-                let endIndex = hex.index(index, offsetBy: 2, limitedBy: hex.endIndex) ?? hex.endIndex
-                let byteString = String(hex[index..<endIndex])
-                if let byte = UInt8(byteString, radix: 16) {
-                    data.append(byte)
-                } else {
-                    throw DESError.invalidInput
+            var tempData = Data()
+            var temp = ""
+            
+            for char in hex {
+                temp += String(char)
+                if temp.count == 2 {
+                    guard let num = UInt8(temp, radix: 16) else {
+                        throw DESError.invalidInput
+                    }
+                    tempData.append(num)
+                    temp = ""
                 }
-                index = endIndex
             }
-            return String(data: data, encoding: .utf8) ?? ""
+            
+            if !temp.isEmpty {
+                throw DESError.invalidInput
+            }
+            data = tempData
         default: // Base64
             guard let base64Data = Data(base64Encoded: text) else {
                 throw DESError.invalidInput

@@ -20,7 +20,7 @@ struct AESView: View {
     private let keySizes = [128, 192, 256]
     private let paddings = ["PKCS7", "Zero", "None"]
     private let encodings = ["UTF8", "HEX", "Base64"]
-    private let outputEncodings = ["Base64", "HEX"] // 输出格式选项
+    private let outputEncodings = ["Base64", "HEX", "HEX(无空格)"] // 输出格式选项
     
     private let tooltips = [
         "ecb": "ECB模式安全性较低，不推荐在实际应用中使用",
@@ -190,45 +190,47 @@ struct AESView: View {
             
             // 控制按钮
             HStack(spacing: 12) {
-                Button(action: { processAES() }) {
-                    Label(isEncrypting ? "加密" : "解密", 
-                          systemImage: "arrow.right.circle.fill")
+                // 左侧按钮组
+                HStack(spacing: 12) {
+                    Button(action: { processAES() }) {
+                        Label(isEncrypting ? "加密" : "解密", 
+                              systemImage: "arrow.right.circle.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .help(isEncrypting ? "使用当前设置加密数据" : "使用当前设置解密数据")
+                    
+                    Button(action: {
+                        inputText = ""
+                        outputText = ""
+                        key = ""
+                        iv = ""
+                    }) {
+                        Label("清空", systemImage: "trash")
+                    }
+                    .buttonStyle(.bordered)
+                    .help("清空所有输入和输出")
+                    
+                    Button(action: {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(outputText, forType: .string)
+                    }) {
+                        Label("复制结果", systemImage: "doc.on.doc")
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(outputText.isEmpty)
+                    .help("将结果复制到剪贴板")
                 }
-                .buttonStyle(.borderedProminent)
-                .help(isEncrypting ? "使用当前设置加密数据" : "使用当前设置解密数据")
-                
-                Button(action: {
-                    inputText = ""
-                    outputText = ""
-                    key = ""
-                    iv = ""
-                }) {
-                    Label("清空", systemImage: "trash")
-                }
-                .buttonStyle(.bordered)
-                .help("清空所有输入和输出")
                 
                 Spacer()
                 
-                // 添加输出格式选择器
+                // 右侧格式选择器
                 Picker("输出格式", selection: $selectedOutputEncoding) {
                     ForEach(outputEncodings, id: \.self) { encoding in
                         Text(encoding).tag(encoding)
                     }
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 150)
-                .help("选择加密结果的输出格式")
-                
-                Button(action: {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(outputText, forType: .string)
-                }) {
-                    Label("复制结果", systemImage: "doc.on.doc")
-                }
-                .buttonStyle(.bordered)
-                .disabled(outputText.isEmpty)
-                .help("将结果复制到剪贴板")
+                .frame(width: 250)
             }
             .padding(.horizontal)
             
@@ -296,7 +298,7 @@ struct AESView: View {
             if let utf8String = String(data: data, encoding: .utf8) {
                 return utf8String
             } else {
-                // 自动切换到HEX格式并更新选择器
+                // 自动切换到HEX格式并更新选器
                 DispatchQueue.main.async {
                     if selectedKeyEncoding == "UTF8" {
                         selectedKeyEncoding = "HEX"
@@ -449,7 +451,9 @@ struct AESView: View {
         // 根据选择的输出格式返回结果
         switch selectedOutputEncoding {
         case "HEX":
-            return encryptedData.map { String(format: "%02hhx", $0) }.joined(separator: " ")
+            return encryptedData.map { String(format: "%02x", $0) }.joined(separator: " ")
+        case "HEX(无空格)":
+            return encryptedData.map { String(format: "%02x", $0) }.joined()
         default: // Base64
             return encryptedData.base64EncodedString()
         }
@@ -459,7 +463,7 @@ struct AESView: View {
         // 根据当前输出格式解析输入
         let data: Data
         switch selectedOutputEncoding {
-        case "HEX":
+        case "HEX", "HEX(无空格)":
             let hex = text.replacingOccurrences(of: " ", with: "")
             var tempData = Data()
             var temp = ""
@@ -490,7 +494,7 @@ struct AESView: View {
         let keyData = try convertFromEncoding(key, encoding: selectedKeyEncoding)
         let ivData = selectedMode != "ECB" ? try convertFromEncoding(iv, encoding: selectedIVEncoding) : Data(count: kCCBlockSizeAES128)
         
-        // 检查密钥长度
+        // 检查密钥���度
         guard keyData.count == selectedKeySize / 8 else {
             throw AESError.invalidKeySize
         }
