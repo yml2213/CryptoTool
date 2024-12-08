@@ -16,6 +16,22 @@ struct MD5View: View {
         "16位 反转"
     ]
     
+    // 添加临时数据存储
+    private let tempDataKey = "MD5View_TempData"
+    
+    init() {
+        if let savedData = TempDataManager.shared.getData(forKey: tempDataKey) as? [String: String] {
+            _inputText = State(initialValue: savedData["inputText"] ?? "")
+        }
+    }
+    
+    private func saveCurrentData() {
+        let dataToSave: [String: String] = [
+            "inputText": inputText
+        ]
+        TempDataManager.shared.saveData(dataToSave, forKey: tempDataKey)
+    }
+    
     var body: some View {
         VStack(spacing: 16) {
             // 输入输出区域
@@ -98,6 +114,9 @@ struct MD5View: View {
         .padding()
         .onAppear {
             generateMD5()
+        }
+        .onChange(of: inputText) { _ in
+            saveCurrentData()
         }
     }
     

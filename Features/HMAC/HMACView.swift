@@ -21,6 +21,18 @@ struct HMACView: View {
         [inputText, secretKey].joined()
     }
     
+    // 在 struct HMACView 开头添加存储键
+    private let tempDataKey = "HMACView_TempData"
+    
+    init() {
+        // 从临时存储中恢复数据
+        if let savedData = TempDataManager.shared.getData(forKey: tempDataKey) as? [String: String] {
+            _inputText = State(initialValue: savedData["inputText"] ?? "")
+            _secretKey = State(initialValue: savedData["key"] ?? "")
+            // ... 其他需要恢复的数据
+        }
+    }
+    
     var body: some View {
         VStack(spacing: 16) {
             SharedViews.GroupBoxView {
@@ -113,11 +125,15 @@ struct HMACView: View {
             Spacer()
         }
         .padding()
-        // 添加onChange处理器
         .onChange(of: allValues) { _, _ in
             generateHMAC()
         }
-        // 添加onAppear处理器
+        .onChange(of: inputText) { _ in
+            saveCurrentData()
+        }
+        .onChange(of: secretKey) { _ in
+            saveCurrentData()
+        }
         .onAppear {
             generateHMAC()
         }
@@ -173,6 +189,16 @@ struct HMACView: View {
     private func HMACSHA512(key: Data, message: Data) -> String {
         let hmac = HMAC<SHA512>.authenticationCode(for: message, using: SymmetricKey(data: key))
         return hmac.map { String(format: "%02hhx", $0) }.joined()
+    }
+    
+    // 添加保存数据的方法
+    private func saveCurrentData() {
+        let dataToSave: [String: String] = [
+            "inputText": inputText,
+            "key": secretKey
+            // ... 其他需要保存的数据
+        ]
+        TempDataManager.shared.saveData(dataToSave, forKey: tempDataKey)
     }
 }
 

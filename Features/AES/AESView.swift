@@ -46,6 +46,30 @@ struct AESView: View {
         ].joined()
     }
     
+    // 添加临时数据存储
+    private let tempDataKey = "AESView_TempData"
+    
+    init() {
+        if let savedData = TempDataManager.shared.getData(forKey: tempDataKey) as? [String: String] {
+            _inputText = State(initialValue: savedData["inputText"] ?? "")
+            _key = State(initialValue: savedData["key"] ?? "")
+            _iv = State(initialValue: savedData["iv"] ?? "")
+            _selectedMode = State(initialValue: savedData["mode"] ?? "CBC")
+            _selectedKeySize = State(initialValue: Int(savedData["keySize"] ?? "") ?? 128)
+        }
+    }
+    
+    private func saveCurrentData() {
+        let dataToSave: [String: String] = [
+            "inputText": inputText,
+            "key": key,
+            "iv": iv,
+            "mode": selectedMode,
+            "keySize": String(selectedKeySize)
+        ]
+        TempDataManager.shared.saveData(dataToSave, forKey: tempDataKey)
+    }
+    
     var body: some View {
         VStack(spacing: 16) {
             // 模式选择
@@ -208,6 +232,21 @@ struct AESView: View {
             } else {
                 outputText = ""
             }
+        }
+        .onChange(of: inputText) { _ in
+            saveCurrentData()
+        }
+        .onChange(of: key) { _ in
+            saveCurrentData()
+        }
+        .onChange(of: iv) { _ in
+            saveCurrentData()
+        }
+        .onChange(of: selectedMode) { _ in
+            saveCurrentData()
+        }
+        .onChange(of: selectedKeySize) { _ in
+            saveCurrentData()
         }
     }
     
@@ -444,7 +483,7 @@ struct AESView: View {
             throw AESError.invalidInput
         }
         
-        // 设置填��
+        // 设置填充
         switch selectedPadding {
         case "PKCS7":
             options |= CCOptions(kCCOptionPKCS7Padding)

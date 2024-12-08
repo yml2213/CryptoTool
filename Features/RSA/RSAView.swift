@@ -23,6 +23,26 @@ struct RSAView: View {
         [inputText, publicKey, privateKey, selectedOutputEncoding].joined()
     }
     
+    // 添加临时数据存储
+    private let tempDataKey = "RSAView_TempData"
+    
+    init() {
+        if let savedData = TempDataManager.shared.getData(forKey: tempDataKey) as? [String: String] {
+            _inputText = State(initialValue: savedData["inputText"] ?? "")
+            _publicKey = State(initialValue: savedData["publicKey"] ?? "")
+            _privateKey = State(initialValue: savedData["privateKey"] ?? "")
+        }
+    }
+    
+    private func saveCurrentData() {
+        let dataToSave: [String: String] = [
+            "inputText": inputText,
+            "publicKey": publicKey,
+            "privateKey": privateKey
+        ]
+        TempDataManager.shared.saveData(dataToSave, forKey: tempDataKey)
+    }
+    
     var body: some View {
         VStack(spacing: 16) {
             // 模式选择
@@ -314,6 +334,15 @@ struct RSAView: View {
             } else {
                 outputText = ""
             }
+        }
+        .onChange(of: inputText) { _ in
+            saveCurrentData()
+        }
+        .onChange(of: publicKey) { _ in
+            saveCurrentData()
+        }
+        .onChange(of: privateKey) { _ in
+            saveCurrentData()
         }
     }
     

@@ -4,6 +4,7 @@ import CryptoKit
 struct SHAView: View {
     @State private var inputText: String = ""
     @State private var shaResults: [String: String] = [:]
+    @State private var selectedAlgorithm: String = "SHA1"
     @Environment(\.colorScheme) var colorScheme
     
     private let resultOrder = [
@@ -12,6 +13,23 @@ struct SHAView: View {
         "SHA384",
         "SHA512"
     ]
+    
+    private let tempDataKey = "SHAView_TempData"
+    
+    init() {
+        if let savedData = TempDataManager.shared.getData(forKey: tempDataKey) as? [String: String] {
+            _inputText = State(initialValue: savedData["inputText"] ?? "")
+            _selectedAlgorithm = State(initialValue: savedData["algorithm"] ?? "SHA1")
+        }
+    }
+    
+    private func saveCurrentData() {
+        let dataToSave: [String: String] = [
+            "inputText": inputText,
+            "algorithm": selectedAlgorithm
+        ]
+        TempDataManager.shared.saveData(dataToSave, forKey: tempDataKey)
+    }
     
     var body: some View {
         VStack(spacing: 16) {
@@ -98,6 +116,12 @@ struct SHAView: View {
         .padding()
         .onAppear {
             generateSHA()
+        }
+        .onChange(of: inputText) { _ in
+            saveCurrentData()
+        }
+        .onChange(of: selectedAlgorithm) { _ in
+            saveCurrentData()
         }
     }
     

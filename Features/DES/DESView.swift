@@ -40,6 +40,16 @@ struct DESView: View {
         ].joined()
     }
     
+    private let tempDataKey = "DESView_TempData"
+    
+    init() {
+        if let savedData = TempDataManager.shared.getData(forKey: tempDataKey) as? [String: String] {
+            _inputText = State(initialValue: savedData["inputText"] ?? "")
+            _key = State(initialValue: savedData["key"] ?? "")
+            _iv = State(initialValue: savedData["iv"] ?? "")
+        }
+    }
+    
     var body: some View {
         VStack(spacing: 16) {
             HStack(spacing: 20) {
@@ -166,6 +176,15 @@ struct DESView: View {
                 outputText = ""
             }
         }
+        .onChange(of: inputText) { _ in
+            saveCurrentData()
+        }
+        .onChange(of: key) { _ in
+            saveCurrentData()
+        }
+        .onChange(of: iv) { _ in
+            saveCurrentData()
+        }
     }
     
     private func encryptDES() {
@@ -203,7 +222,7 @@ struct DESView: View {
             throw DESError.invalidIV
         }
         
-        // 设置加密选项
+        // 设置��密选项
         var options: CCOptions = 0
         
         // 设置模式
@@ -416,6 +435,15 @@ struct DESView: View {
         default:
             throw DESError.invalidInput
         }
+    }
+    
+    private func saveCurrentData() {
+        let dataToSave: [String: String] = [
+            "inputText": inputText,
+            "key": key,
+            "iv": iv
+        ]
+        TempDataManager.shared.saveData(dataToSave, forKey: tempDataKey)
     }
 }
 
