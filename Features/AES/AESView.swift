@@ -19,7 +19,7 @@ struct AESView: View {
     private let keySizes = [128, 192, 256]
     private let paddings = ["PKCS7", "Zero", "None"]
     private let encodings = ["UTF8", "HEX", "Base64"]
-    private let outputEncodings = ["Base64", "HEX", "HEX(无空格)"] // 输出格式选项
+    private let outputEncodings = ["Base64", "HEX", "HEX(无空格)"]
     
     private let tooltips = [
         "ecb": "ECB模式安全性较低，不推荐在实际应用中使用",
@@ -50,46 +50,43 @@ struct AESView: View {
         VStack(spacing: 16) {
             // 模式选择
             HStack(spacing: 20) {
-                Picker("密钥长度", selection: $selectedKeySize) {
-                    ForEach(keySizes, id: \.self) { size in
-                        Text("\(size)位").tag(size)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .help("选择AES密钥长度")
+                SharedViews.ModePicker(
+                    title: "密钥长度",
+                    selection: .init(
+                        get: { String(selectedKeySize) },
+                        set: { selectedKeySize = Int($0) ?? 128 }
+                    ),
+                    options: keySizes.map(String.init),
+                    help: "选择AES密钥长度"
+                )
                 
-                Picker("加密模式", selection: $selectedMode) {
-                    ForEach(modes, id: \.self) { mode in
-                        Text(mode).tag(mode)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .help(tooltips[selectedMode.lowercased()] ?? "")
+                SharedViews.ModePicker(
+                    title: "加密模式",
+                    selection: $selectedMode,
+                    options: modes,
+                    help: tooltips[selectedMode.lowercased()]
+                )
                 
-                Picker("填充模式", selection: $selectedPadding) {
-                    ForEach(paddings, id: \.self) { padding in
-                        Text(padding).tag(padding)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .help(tooltips[selectedPadding.lowercased()] ?? "")
+                SharedViews.ModePicker(
+                    title: "填充模式",
+                    selection: $selectedPadding,
+                    options: paddings,
+                    help: tooltips[selectedPadding.lowercased()]
+                )
             }
             .padding(.horizontal)
             
             // 密钥和IV设置区域
-            GroupBox {
+            SharedViews.GroupBoxView {
                 VStack(alignment: .leading, spacing: 12) {
                     // 密钥部分
                     HStack {
-                        Label("密钥 (\(selectedKeySize/8)字节)", systemImage: "key")
-                            .foregroundColor(.secondary)
-                            .font(.headline)
-                        
-                        Text("当前编码: \(selectedKeyEncoding)")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
-                        
-                        Spacer()
+                        SharedViews.KeyInput(
+                            title: "密钥 (\(selectedKeySize/8)字节)",
+                            systemImage: "key",
+                            text: $key,
+                            help: "输入\(selectedKeySize/8)字节的密钥"
+                        )
                         
                         Button(action: {
                             let randomKey = generateRandomBytes(count: selectedKeySize/8)
@@ -100,32 +97,22 @@ struct AESView: View {
                         .buttonStyle(.bordered)
                         .help("生成一个随机的\(selectedKeySize/8)字节密钥")
                         
-                        Picker("密钥编码", selection: $selectedKeyEncoding) {
-                            ForEach(encodings, id: \.self) { encoding in
-                                Text(encoding).tag(encoding)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: 250)
-                        .help("选择密钥的编码格式")
+                        SharedViews.EncodingPicker(
+                            title: "密钥编码",
+                            selection: $selectedKeyEncoding,
+                            options: encodings
+                        )
                     }
                     
-                    TextField("请输入密钥", text: $key)
-                        .textFieldStyle(.roundedBorder)
-                        .help("输入\(selectedKeySize/8)字节的密钥")
-                    
                     // IV部分
-                    VStack(spacing: 12) {
+                    if selectedMode != "ECB" {
                         HStack {
-                            Label("初始向量(IV) (16字节)", systemImage: "number")
-                                .foregroundColor(.secondary)
-                                .font(.headline)
-                            
-                            Text("当前编码: \(selectedIVEncoding)")
-                                .foregroundColor(.secondary)
-                                .font(.caption)
-                            
-                            Spacer()
+                            SharedViews.KeyInput(
+                                title: "初始向量(IV) (16字节)",
+                                systemImage: "number",
+                                text: $iv,
+                                help: "输入16字节的初始向量"
+                            )
                             
                             Button(action: {
                                 let randomIV = generateRandomBytes(count: 16)
@@ -136,160 +123,91 @@ struct AESView: View {
                             .buttonStyle(.bordered)
                             .help("生成一个随机的16字节IV")
                             
-                            Picker("IV编码", selection: $selectedIVEncoding) {
-                                ForEach(encodings, id: \.self) { encoding in
-                                    Text(encoding).tag(encoding)
-                                }
-                            }
-                            .pickerStyle(.segmented)
-                            .frame(width: 250)
-                            .help("选择IV的编码格式")
+                            SharedViews.EncodingPicker(
+                                title: "IV编码",
+                                selection: $selectedIVEncoding,
+                                options: encodings
+                            )
                         }
-                        
-                        TextField("请输入IV", text: $iv)
-                            .textFieldStyle(.roundedBorder)
-                            .help("输入16字节的初始向量")
                     }
-                    .opacity(selectedMode == "ECB" ? 0 : 1)
-                    .allowsHitTesting(selectedMode != "ECB")
                 }
             }
             
             // 输入输出区域
-            GroupBox {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Label("输入文本", systemImage: "text.alignleft")
-                            .foregroundColor(.secondary)
-                            .font(.headline)
-                        
-                        Spacer()
-                        
-                        Text("输入需要处理的文本")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
-                    }
+            SharedViews.GroupBoxView {
+                SharedViews.InputTextEditor(
+                    title: "输入文本",
+                    placeholder: "输入需要处理的文本",
+                    text: $inputText
+                )
+                
+                HStack {
+                    SharedViews.ActionButtons(
+                        primaryAction: {
+                            do {
+                                outputText = try encryptAES(text: inputText, key: key, iv: iv)
+                            } catch {
+                                outputText = "加密失败: \(error.localizedDescription)"
+                            }
+                        },
+                        primaryLabel: "加密",
+                        primaryIcon: "lock.fill",
+                        clearAction: {
+                            inputText = ""
+                            outputText = ""
+                        },
+                        copyAction: {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(outputText, forType: .string)
+                        },
+                        swapAction: {
+                            let temp = inputText
+                            inputText = outputText
+                            outputText = temp
+                        },
+                        isOutputEmpty: outputText.isEmpty
+                    )
                     
-                    TextEditor(text: $inputText)
-                        .font(.system(.body, design: .monospaced))
-                        .frame(height: 80)
-                        .padding(8)
-                        .background(Color(NSColor.textBackgroundColor))
-                        .cornerRadius(6)
+                    Spacer()
                     
-                    // 控制按钮
-                    HStack(spacing: 12) {
-                        // 左侧按钮组
-                        HStack(spacing: 12) {
-                            Button(action: {
-                                do {
-                                    outputText = try encryptAES(text: inputText, key: key, iv: iv)
-                                } catch {
-                                    outputText = "加密失败: \(error.localizedDescription)"
-                                }
-                            }) {
-                                Label("加密", systemImage: "lock.fill")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .help("使用当前设置加密数据")
-                            
-                            Button(action: {
-                                do {
-                                    outputText = try decryptAES(text: inputText, key: key, iv: iv)
-                                } catch {
-                                    outputText = "解密失败: \(error.localizedDescription)"
-                                }
-                            }) {
-                                Label("解密", systemImage: "lock.open.fill")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .help("使用当前设置解密数据")
-                            
-                            Button(action: {
-                                inputText = ""
-                                outputText = ""
-                            }) {
-                                Label("清空", systemImage: "trash")
-                            }
-                            .buttonStyle(.bordered)
-                            .help("清空输入和输出")
-                            
-                            Button(action: {
-                                NSPasteboard.general.clearContents()
-                                NSPasteboard.general.setString(outputText, forType: .string)
-                            }) {
-                                Label("复制结果", systemImage: "doc.on.doc")
-                            }
-                            .buttonStyle(.bordered)
-                            .disabled(outputText.isEmpty)
-                            .help("将结果复制到剪贴板")
-                            
-                            Button(action: {
-                                let temp = inputText
-                                inputText = outputText
-                                outputText = temp
-                            }) {
-                                Label("互换", systemImage: "arrow.up.arrow.down")
-                            }
-                            .buttonStyle(.bordered)
-                            .help("交换输入和输出的位置")
-                            .disabled(outputText.isEmpty)
+                    Button(action: {
+                        do {
+                            outputText = try decryptAES(text: inputText, key: key, iv: iv)
+                        } catch {
+                            outputText = "解密失败: \(error.localizedDescription)"
                         }
-                        
-                        Spacer()
-                        
-                        // 右侧格式选择器
-                        Picker("输出格式", selection: $selectedOutputEncoding) {
-                            ForEach(outputEncodings, id: \.self) { encoding in
-                                Text(encoding).tag(encoding)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: 250)
+                    }) {
+                        Label("解密", systemImage: "lock.open.fill")
                     }
-                    .padding(.horizontal)
+                    .buttonStyle(.borderedProminent)
                     
-                    // 输出结果
-                    HStack {
-                        Label("处理结果", systemImage: "text.alignleft")
-                            .foregroundColor(.secondary)
-                            .font(.headline)
-                        
-                        Spacer()
-                        
-                        if !outputText.isEmpty {
-                            Text("处理完成")
-                                .foregroundColor(.green)
-                                .font(.caption)
-                        }
-                    }
-                    
-                    Text(outputText)
-                        .font(.system(.body, design: .monospaced))
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
-                        .background(Color(NSColor.controlBackgroundColor))
-                        .cornerRadius(6)
+                    SharedViews.EncodingPicker(
+                        title: "输出格式",
+                        selection: $selectedOutputEncoding,
+                        options: outputEncodings
+                    )
                 }
+                
+                SharedViews.ResultView(
+                    title: "处理结果",
+                    value: outputText,
+                    showStatus: true
+                )
             }
             
             Spacer()
         }
         .padding()
         .onChange(of: allValues) { _, _ in
-            processAES()
-        }
-        .onAppear {
-            // 初始化时设置认值的编码格式
-            if let defaultKeyData = key.data(using: .utf8) {
-                key = formatToEncoding(defaultKeyData, encoding: selectedKeyEncoding)
+            if !inputText.isEmpty {
+                do {
+                    outputText = try encryptAES(text: inputText, key: key, iv: iv)
+                } catch {
+                    outputText = "处理失败: \(error.localizedDescription)"
+                }
+            } else {
+                outputText = ""
             }
-            if let defaultIVData = iv.data(using: .utf8) {
-                iv = formatToEncoding(defaultIVData, encoding: selectedIVEncoding)
-            }
-            // 初始化时处理一次
-            processAES()
         }
     }
     
@@ -327,7 +245,7 @@ struct AESView: View {
         }
     }
     
-    // 添加��码转换函数
+    // 添加码转换函数
     private func convertFromEncoding(_ text: String, encoding: String) throws -> Data {
         switch encoding {
         case "UTF8":
@@ -526,7 +444,7 @@ struct AESView: View {
             throw AESError.invalidInput
         }
         
-        // 设置填充
+        // 设置填��
         switch selectedPadding {
         case "PKCS7":
             options |= CCOptions(kCCOptionPKCS7Padding)
