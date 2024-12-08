@@ -22,7 +22,7 @@ struct AESView: View {
     private let outputEncodings = ["Base64", "HEX", "HEX(无空格)"]
     
     private let tooltips = [
-        "ecb": "ECB模式安全性较低，不推荐在实际应用中使用",
+        "ecb": "ECB模式安��性较低，不推荐在实际应用中使用",
         "cbc": "CBC模式需要初始向量(IV)，安全性较高",
         "key128": "128位密钥(16字节)，适用于大多数场景",
         "key192": "192位密钥(24字节)，提供更高安全性",
@@ -132,11 +132,12 @@ struct AESView: View {
                                 let randomKey = generateRandomUTF8String(count: selectedKeySize/8)
                                 key = randomKey
                             }) {
-                                Label("生成随机密钥", systemImage: "wand.and.stars")
+                                Image(systemName: "wand.and.stars")
+                                    .frame(width: 20)
                             }
                             .buttonStyle(.bordered)
-                            .help("生成一个随机的\(selectedKeySize/8)字节密钥")
-                            .frame(width: 120)
+                            .frame(width: 32)
+                            .help("生成随机的\(selectedKeySize/8)字节密钥")
                         }
                         
                         VStack(alignment: .leading, spacing: 6) {
@@ -182,11 +183,12 @@ struct AESView: View {
                                     let randomIV = generateRandomUTF8String(count: 16)
                                     iv = randomIV
                                 }) {
-                                    Label("生成随机IV", systemImage: "wand.and.stars")
+                                    Image(systemName: "wand.and.stars")
+                                        .frame(width: 20)
                                 }
                                 .buttonStyle(.bordered)
-                                .help("生成一个随机的16字节IV")
-                                .frame(width: 120)
+                                .frame(width: 32)
+                                .help("生成随机的16字节IV")
                             }
                             
                             VStack(alignment: .leading, spacing: 6) {
@@ -432,7 +434,7 @@ struct AESView: View {
             throw AESError.invalidInput
         }
         
-        // ��置填充
+        // 置填充
         switch selectedPadding {
         case "PKCS7":
             options |= CCOptions(kCCOptionPKCS7Padding)

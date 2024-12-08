@@ -1,6 +1,7 @@
 import SwiftUI
 import CryptoKit
 import CommonCrypto
+import AppKit
 
 struct DESView: View {
     @State private var inputText: String = ""
@@ -71,35 +72,105 @@ struct DESView: View {
             
             SharedViews.GroupBoxView {
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        SharedViews.KeyInput(
-                            title: "密钥 (8字节)",
-                            systemImage: "key",
-                            text: $key,
-                            help: "输入8字节的密钥"
-                        )
+                    // 密钥部分
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("密钥 (8字节)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            HStack(spacing: 6) {
+                                Image(systemName: "key")
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 16)
+                                
+                                TextField("输入8字节的密钥", text: $key)
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(minWidth: 100)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         
-                        SharedViews.EncodingPicker(
-                            title: "密钥编码",
-                            selection: $selectedKeyEncoding,
-                            options: encodings
-                        )
-                    }
-                    
-                    if selectedMode != "ECB" {
-                        HStack {
-                            SharedViews.KeyInput(
-                                title: "初始向量(IV) (8字节)",
-                                systemImage: "number",
-                                text: $iv,
-                                help: "输入8字节的初始向量"
-                            )
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(" ")  // 空占位符，用于对齐
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            Button(action: {
+                                let randomKey = generateRandomUTF8String(count: 8)
+                                key = randomKey
+                            }) {
+                                Image(systemName: "wand.and.stars")
+                                    .frame(width: 20)
+                            }
+                            .buttonStyle(.bordered)
+                            .frame(width: 32)
+                            .help("生成随机的8字节密钥")
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(" ")  // 空占位符，用于对齐
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                             
                             SharedViews.EncodingPicker(
-                                title: "IV编码",
-                                selection: $selectedIVEncoding,
+                                title: "密钥编码",
+                                selection: $selectedKeyEncoding,
                                 options: encodings
                             )
+                            .frame(width: 300)
+                        }
+                    }
+                    
+                    // IV部分
+                    if selectedMode != "ECB" {
+                        HStack(alignment: .firstTextBaseline, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("初始向量(IV) (8字节)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                HStack(spacing: 6) {
+                                    Image(systemName: "number")
+                                        .foregroundColor(.secondary)
+                                        .frame(width: 16)
+                                    
+                                    TextField("输入8字节的初始向量", text: $iv)
+                                        .textFieldStyle(.roundedBorder)
+                                        .frame(minWidth: 100)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(" ")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                Button(action: {
+                                    let randomIV = generateRandomUTF8String(count: 8)
+                                    iv = randomIV
+                                }) {
+                                    Image(systemName: "wand.and.stars")
+                                        .frame(width: 20)
+                                }
+                                .buttonStyle(.bordered)
+                                .frame(width: 32)
+                                .help("生成随机的8字节IV")
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(" ")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                SharedViews.EncodingPicker(
+                                    title: "IV编码",
+                                    selection: $selectedIVEncoding,
+                                    options: encodings
+                                )
+                                .frame(width: 300)
+                            }
                         }
                     }
                 }
@@ -442,6 +513,14 @@ struct DESView: View {
             "iv": iv
         ]
         TempDataManager.shared.saveData(dataToSave, forKey: tempDataKey)
+    }
+    
+    private func generateRandomUTF8String(count: Int) -> String {
+        // 使用可打印的ASCII字符范围（33-126）
+        let allowedChars = (33...126).map { Character(UnicodeScalar($0)) }
+        return String((0..<count).map { _ in
+            allowedChars[Int.random(in: 0..<allowedChars.count)]
+        })
     }
 }
 
