@@ -22,7 +22,7 @@ struct AESView: View {
     private let outputEncodings = ["Base64", "HEX", "HEX(无空格)"]
     
     private let tooltips = [
-        "ecb": "ECB模式安全性较低，不推荐在实际应用中使用",
+        "ecb": "ECB模式安��性较低，不推荐在实际应用中使用",
         "cbc": "CBC模式需要初始向量(IV)，安全性较高",
         "key128": "128位密钥(16字节)，适用于大多数场景",
         "key192": "192位密钥(24字节)，提供更高安全性",
@@ -114,8 +114,8 @@ struct AESView: View {
                         )
                         
                         Button(action: {
-                            let randomKey = generateRandomBytes(count: selectedKeySize/8)
-                            key = formatToEncoding(randomKey, encoding: selectedKeyEncoding)
+                            let randomKey = generateRandomUTF8String(count: selectedKeySize/8)
+                            key = randomKey
                         }) {
                             Label("生成随机密钥", systemImage: "wand.and.stars")
                         }
@@ -140,8 +140,8 @@ struct AESView: View {
                             )
                             
                             Button(action: {
-                                let randomIV = generateRandomBytes(count: 16)
-                                iv = formatToEncoding(randomIV, encoding: selectedIVEncoding)
+                                let randomIV = generateRandomUTF8String(count: 16)
+                                iv = randomIV
                             }) {
                                 Label("生成随机IV", systemImage: "wand.and.stars")
                             }
@@ -265,7 +265,7 @@ struct AESView: View {
         case "Base64":
             return data.base64EncodedString()
         case "UTF8":
-            // 如果UTF8转���失败，自动切换到HEX格式
+            // 如果UTF8转换失败，自动切换到HEX格式
             if let utf8String = String(data: data, encoding: .utf8) {
                 return utf8String
             } else {
@@ -387,7 +387,7 @@ struct AESView: View {
             break
         }
         
-        // 创建输出缓冲区
+        // 创建输���缓冲区
         let bufferSize = size_t(data.count + kCCBlockSizeAES128)
         var buffer = [UInt8](repeating: 0, count: bufferSize)
         var numBytesEncrypted: size_t = 0
@@ -525,6 +525,15 @@ struct AESView: View {
         
         let decryptedData = Data(buffer.prefix(numBytesDecrypted))
         return String(data: decryptedData, encoding: .utf8) ?? ""
+    }
+    
+    // 添加生成随机UTF8字符串的函数
+    private func generateRandomUTF8String(count: Int) -> String {
+        // 使用可打印的ASCII字符范围（33-126）
+        let allowedChars = (33...126).map { Character(UnicodeScalar($0)) }
+        return String((0..<count).map { _ in
+            allowedChars[Int.random(in: 0..<allowedChars.count)]
+        })
     }
 }
 
