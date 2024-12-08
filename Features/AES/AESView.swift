@@ -72,33 +72,34 @@ struct AESView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            // 模式选择
-            HStack(spacing: 20) {
-                SharedViews.ModePicker(
-                    title: "密钥长度",
-                    selection: .init(
-                        get: { String(selectedKeySize) },
-                        set: { selectedKeySize = Int($0) ?? 128 }
-                    ),
-                    options: keySizes.map(String.init),
-                    help: "选择AES密钥长度"
-                )
-                
-                SharedViews.ModePicker(
-                    title: "加密模式",
-                    selection: $selectedMode,
-                    options: modes,
-                    help: tooltips[selectedMode.lowercased()]
-                )
-                
-                SharedViews.ModePicker(
-                    title: "填充模式",
-                    selection: $selectedPadding,
-                    options: paddings,
-                    help: tooltips[selectedPadding.lowercased()]
-                )
-            }
-            .padding(.horizontal)
+            // 模式选择区域 - 添加 GroupBoxView
+            SharedViews.GroupBoxView {
+                HStack(spacing: 20) {
+                    SharedViews.ModePicker(
+                        title: "密钥长度",
+                        selection: .init(
+                            get: { String(selectedKeySize) },
+                            set: { selectedKeySize = Int($0) ?? 128 }
+                        ),
+                        options: keySizes.map(String.init),
+                        help: "选择AES密钥长度"
+                    )
+                    
+                    SharedViews.ModePicker(
+                        title: "加密模式",
+                        selection: $selectedMode,
+                        options: modes,
+                        help: tooltips[selectedMode.lowercased()]
+                    )
+                    
+                    SharedViews.ModePicker(
+                        title: "填充模式",
+                        selection: $selectedPadding,
+                        options: paddings,
+                        help: tooltips[selectedPadding.lowercased()]
+                    )
+                }
+            }  // 添加 GroupBoxView 的结束括号
             
             // 密钥和IV设置区域
             SharedViews.GroupBoxView {
@@ -264,7 +265,7 @@ struct AESView: View {
         case "Base64":
             return data.base64EncodedString()
         case "UTF8":
-            // 如果UTF8转换失败，自动切换到HEX格式
+            // 如果UTF8转���失败，自动切换到HEX格式
             if let utf8String = String(data: data, encoding: .utf8) {
                 return utf8String
             } else {
