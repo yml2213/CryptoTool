@@ -32,162 +32,120 @@ struct RSAView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            // 模式选择 - 只保留密钥长度选择
+            // 模式选择
             HStack(spacing: 20) {
-                Picker("密钥长度", selection: $selectedKeySize) {
-                    ForEach(keySizes, id: \.self) { size in
-                        Text("\(size)位").tag(size)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .help("选择RSA密钥长度")
+                SharedViews.ModePicker(
+                    title: "密钥长度",
+                    selection: .init(
+                        get: { String(selectedKeySize) },
+                        set: { selectedKeySize = Int($0) ?? RSAConstants.defaultKeySize }
+                    ),
+                    options: keySizes.map(String.init),
+                    help: "选择RSA密钥长度"
+                )
             }
             .padding(.horizontal)
             
             // 密钥区域
-            GroupBox {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(spacing: 20) {
-                        // 公钥部分
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Label("公钥 Public Key", systemImage: "key")
-                                    .foregroundColor(.secondary)
-                                    .font(.headline)
-                                
-                                Spacer()
-                                
-                                Button(action: {
-                                    formatPublicKey()
-                                }) {
-                                    Label("格式化", systemImage: "text.alignleft")
-                                }
-                                .buttonStyle(.bordered)
-                                
-                                Button(action: {
-                                    compressPublicKey()
-                                }) {
-                                    Label("压缩", systemImage: "arrow.down.right.and.arrow.up.left")
-                                }
-                                .buttonStyle(.bordered)
-                                
-                                Button(action: {
-                                    NSPasteboard.general.clearContents()
-                                    NSPasteboard.general.setString(publicKey, forType: .string)
-                                }) {
-                                    Label("复制", systemImage: "doc.on.doc")
-                                }
-                                .buttonStyle(.bordered)
-                                
-                                Button(action: {
-                                    publicKey = ""
-                                }) {
-                                    Label("清空", systemImage: "trash")
-                                }
-                                .buttonStyle(.bordered)
-                            }
+            SharedViews.GroupBoxView {
+                HStack(spacing: 20) {
+                    // 公钥部分
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Label("公钥 Public Key", systemImage: "key")
+                                .foregroundColor(.secondary)
+                                .font(.headline)
                             
-                            TextEditor(text: $publicKey)
-                                .font(.system(.body, design: .monospaced))
-                                .frame(height: 100)
-                                .padding(8)
-                                .background(Color(NSColor.textBackgroundColor))
-                                .cornerRadius(6)
+                            Spacer()
+                            
+                            Button("格式化") { formatPublicKey() }
+                                .buttonStyle(.bordered)
+                            
+                            Button("压缩") { compressPublicKey() }
+                                .buttonStyle(.bordered)
+                            
+                            Button("复制") {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(publicKey, forType: .string)
+                            }
+                            .buttonStyle(.bordered)
+                            
+                            Button("清空") { publicKey = "" }
+                                .buttonStyle(.bordered)
                         }
-                        .frame(maxWidth: .infinity)
                         
-                        // 私钥部分
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Label("私钥 Private Key", systemImage: "key.fill")
-                                    .foregroundColor(.secondary)
-                                    .font(.headline)
-                                
-                                Spacer()
-                                
-                                Button(action: {
-                                    formatPrivateKey()
-                                }) {
-                                    Label("格式化", systemImage: "text.alignleft")
-                                }
-                                .buttonStyle(.bordered)
-                                
-                                Button(action: {
-                                    compressPrivateKey()
-                                }) {
-                                    Label("压缩", systemImage: "arrow.down.right.and.arrow.up.left")
-                                }
-                                .buttonStyle(.bordered)
-                                
-                                Button(action: {
-                                    NSPasteboard.general.clearContents()
-                                    NSPasteboard.general.setString(privateKey, forType: .string)
-                                }) {
-                                    Label("复制", systemImage: "doc.on.doc")
-                                }
-                                .buttonStyle(.bordered)
-                                
-                                Button(action: {
-                                    privateKey = ""
-                                }) {
-                                    Label("清空", systemImage: "trash")
-                                }
-                                .buttonStyle(.bordered)
-                            }
-                            
-                            TextEditor(text: $privateKey)
-                                .font(.system(.body, design: .monospaced))
-                                .frame(height: 100)
-                                .padding(8)
-                                .background(Color(NSColor.textBackgroundColor))
-                                .cornerRadius(6)
-                        }
-                        .frame(maxWidth: .infinity)
+                        TextEditor(text: $publicKey)
+                            .font(.system(.body, design: .monospaced))
+                            .frame(height: 100)
+                            .padding(8)
+                            .background(Color(NSColor.textBackgroundColor))
+                            .cornerRadius(6)
                     }
+                    .frame(maxWidth: .infinity)
+                    
+                    // 私钥部分
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Label("私钥 Private Key", systemImage: "key.fill")
+                                .foregroundColor(.secondary)
+                                .font(.headline)
+                            
+                            Spacer()
+                            
+                            Button("格式化") { formatPrivateKey() }
+                                .buttonStyle(.bordered)
+                            
+                            Button("压缩") { compressPrivateKey() }
+                                .buttonStyle(.bordered)
+                            
+                            Button("复制") {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(privateKey, forType: .string)
+                            }
+                            .buttonStyle(.bordered)
+                            
+                            Button("清空") { privateKey = "" }
+                                .buttonStyle(.bordered)
+                        }
+                        
+                        TextEditor(text: $privateKey)
+                            .font(.system(.body, design: .monospaced))
+                            .frame(height: 100)
+                            .padding(8)
+                            .background(Color(NSColor.textBackgroundColor))
+                            .cornerRadius(6)
+                    }
+                    .frame(maxWidth: .infinity)
                 }
             }
             
-            // 生成密钥对和相关操作按钮
+            // 密钥操作按钮
             HStack(spacing: 12) {
-                Button(action: {
-                    generateKeyPair()
-                }) {
-                    Label("生成密钥对", systemImage: "key.horizontal")
-                }
-                .buttonStyle(.bordered)
-                .help("生成新的RSA密钥对")
-                
-                Button(action: {
-                    do {
-                        try validateKeyPair()
-                        showMessage("密钥对验证成功")
-                    } catch {
-                        showMessage("校验失败: \(error.localizedDescription)")
-                    }
-                }) {
-                    Label("校验密钥对", systemImage: "checkmark.shield")
-                }
-                .buttonStyle(.bordered)
-                .help("验证当前密钥对是否匹配")
-                .disabled(publicKey.isEmpty || privateKey.isEmpty)
+                SharedViews.ActionButtons(
+                    primaryAction: { generateKeyPair() },
+                    primaryLabel: "生成密钥对",
+                    primaryIcon: "key.horizontal",
+                    clearAction: {
+                        publicKey = ""
+                        privateKey = ""
+                    },
+                    copyAction: {
+                        do {
+                            try validateKeyPair()
+                            showMessage("密钥对验证成功")
+                        } catch {
+                            showMessage("校验失败: \(error.localizedDescription)")
+                        }
+                    },
+                    swapAction: nil,
+                    isOutputEmpty: publicKey.isEmpty || privateKey.isEmpty
+                )
                 
                 Button(action: {
                     do {
                         let privateKey = try parsePrivateKey()
                         let publicKey = try extractPublicKey(from: privateKey)
-                        
-                        // 出公钥数据
-                        var error: Unmanaged<CFError>?
-                        guard let publicKeyData = SecKeyCopyExternalRepresentation(publicKey, &error) as Data? else {
-                            throw RSAError.extractionFailed
-                        }
-                        
-                        // 转换为PEM格式
-                        var publicPEM = "-----BEGIN PUBLIC KEY-----\n"
-                        publicPEM += publicKeyData.base64EncodedString().chunks(ofCount: 64).joined(separator: "\n")
-                        publicPEM += "\n-----END PUBLIC KEY-----"
-                        
-                        self.publicKey = publicPEM
+                        self.publicKey = try RSAKeyManager.extractPublicKey(from: privateKey)
                         showMessage("从私钥提取公钥成功")
                     } catch {
                         showMessage("提取失败: \(error.localizedDescription)")
@@ -205,131 +163,64 @@ struct RSAView: View {
             }
             .padding(.horizontal)
             
-            // 添加模数显示区域
+            // 模数显示区域
             modulusSection()
             
             // 输入输出区域
-            GroupBox {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Label("输入文本", systemImage: "text.alignleft")
-                            .foregroundColor(.secondary)
-                            .font(.headline)
-                        
-                        Spacer()
-                        
-                        Text("输入需要处理的文本")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
-                    }
+            SharedViews.GroupBoxView {
+                SharedViews.InputTextEditor(
+                    title: "输入文本",
+                    placeholder: "输入需要处理的文本",
+                    text: $inputText
+                )
+                
+                HStack {
+                    SharedViews.ActionButtons(
+                        primaryAction: { encryptRSA() },
+                        primaryLabel: "加密",
+                        primaryIcon: "lock.fill",
+                        clearAction: {
+                            inputText = ""
+                            outputText = ""
+                        },
+                        copyAction: {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(outputText, forType: .string)
+                        },
+                        swapAction: {
+                            let temp = inputText
+                            inputText = outputText
+                            outputText = temp
+                        },
+                        isOutputEmpty: outputText.isEmpty
+                    )
                     
-                    TextEditor(text: $inputText)
-                        .font(.system(.body, design: .monospaced))
-                        .frame(height: 80)
-                        .padding(8)
-                        .background(Color(NSColor.textBackgroundColor))
-                        .cornerRadius(6)
-                }
-            }
-            
-            // 控制按钮
-            HStack(spacing: 12) {
-                // 左侧按钮组
-                HStack(spacing: 12) {
-                    // 加密按钮
-                    Button(action: {
-                        encryptRSA()
-                    }) {
-                        Label("加密", systemImage: "lock.fill")
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .help("使用公钥加密数据")
+                    Spacer()
                     
-                    // 解密按钮
-                    Button(action: {
-                        decryptRSA()
-                    }) {
+                    Button(action: { decryptRSA() }) {
                         Label("解密", systemImage: "lock.open.fill")
                     }
                     .buttonStyle(.borderedProminent)
-                    .help("使用私钥解密数据")
                     
-                    Button(action: {
-                        inputText = ""
-                        outputText = ""
-                    }) {
-                        Label("清空", systemImage: "trash")
-                    }
-                    .buttonStyle(.bordered)
-                    .help("清空输入和输出")
-                    
-                    Button(action: {
-                        NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(outputText, forType: .string)
-                    }) {
-                        Label("复制结果", systemImage: "doc.on.doc")
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(outputText.isEmpty)
-                    .help("将结果复制到剪贴板")
-                    
-                    Button(action: {
-                        let temp = inputText
-                        inputText = outputText
-                        outputText = temp
-                    }) {
-                        Label("互换", systemImage: "arrow.up.arrow.down")
-                    }
-                    .buttonStyle(.bordered)
-                    .help("交换输入和输出的位置")
-                    .disabled(outputText.isEmpty)
+                    SharedViews.EncodingPicker(
+                        title: "输出格式",
+                        selection: $selectedOutputEncoding,
+                        options: outputEncodings
+                    )
                 }
                 
-                Spacer()
-                
-                // 右侧格式选择器
-                Picker("输出格式", selection: $selectedOutputEncoding) {
-                    ForEach(outputEncodings, id: \.self) { encoding in
-                        Text(encoding).tag(encoding)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 250)
-            }
-            .padding(.horizontal)
-            
-            // 输出区域
-            GroupBox {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Label("处理结果", systemImage: "text.alignleft")
-                            .foregroundColor(.secondary)
-                            .font(.headline)
-                        
-                        Spacer()
-                        
-                        if !outputText.isEmpty {
-                            Text("处理完成")
-                                .foregroundColor(.green)
-                                .font(.caption)
-                        }
-                    }
-                    
-                    Text(outputText)
-                        .font(.system(.body, design: .monospaced))
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
-                        .background(Color(NSColor.controlBackgroundColor))
-                        .cornerRadius(6)
-                }
+                SharedViews.ResultView(
+                    title: "处理结果",
+                    value: outputText,
+                    showStatus: true
+                )
             }
             
             Spacer()
         }
         .padding()
         .overlay(
-            // 添加Toast提示
+            // Toast提示
             GeometryReader { geometry in
                 if showToast {
                     VStack {
@@ -342,13 +233,10 @@ struct RSAView: View {
                 }
             }
         )
-        // 添加onChange监听
         .onChange(of: allProcessValues) { _, _ in
-            // 只有在有输入内容时才处理
             if !inputText.isEmpty {
                 encryptRSA()
             } else {
-                // 如果输入为空，清空输出
                 outputText = ""
             }
         }
@@ -433,7 +321,7 @@ struct RSAView: View {
         return data
     }
     
-    // 从数据中提取模数和指数
+    // 从数据中提取模���和指数
     private func extractModulusAndExponent(from data: Data) throws -> (modulus: String, exponent: String) {
         guard let result = ASN1Parser.extractModulusAndExponent(from: data) else {
             throw RSAError.extractionFailed
