@@ -1,3 +1,4 @@
+// 移动 CryptoTool/Utils/TempDataManager.swift -> CryptoTool/Core/Utils/TempDataManager.swift 
 import Foundation
 
 class TempDataManager {

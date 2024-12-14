@@ -7,9 +7,9 @@
 	<key>CFBundleIdentifier</key>
 	<string>com.cryptotool.app</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.1</string>
+	<string>1.1.0</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>3</string>
 	<key>CFBundleGetInfoString</key>
 	<string>加密工具 - 支持多种加密算法的工具箱</string>
 	<key>NSHumanReadableCopyright</key>

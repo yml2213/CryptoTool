@@ -76,6 +76,9 @@ public struct SharedViews {
         let primaryAction: () -> Void
         let primaryLabel: String
         let primaryIcon: String
+        let secondaryAction: (() -> Void)?
+        let secondaryLabel: String?
+        let secondaryIcon: String?
         let clearAction: () -> Void
         let copyAction: () -> Void
         let swapAction: (() -> Void)?
@@ -84,6 +87,9 @@ public struct SharedViews {
         public init(primaryAction: @escaping () -> Void,
                    primaryLabel: String,
                    primaryIcon: String,
+                   secondaryAction: (() -> Void)? = nil,
+                   secondaryLabel: String? = nil,
+                   secondaryIcon: String? = nil,
                    clearAction: @escaping () -> Void,
                    copyAction: @escaping () -> Void,
                    swapAction: (() -> Void)?,
@@ -91,6 +97,9 @@ public struct SharedViews {
             self.primaryAction = primaryAction
             self.primaryLabel = primaryLabel
             self.primaryIcon = primaryIcon
+            self.secondaryAction = secondaryAction
+            self.secondaryLabel = secondaryLabel
+            self.secondaryIcon = secondaryIcon
             self.clearAction = clearAction
             self.copyAction = copyAction
             self.swapAction = swapAction
@@ -105,6 +114,15 @@ public struct SharedViews {
                         Label(primaryLabel, systemImage: primaryIcon)
                     }
                     .buttonStyle(.borderedProminent)
+                    
+                    if let secondaryAction = secondaryAction,
+                       let secondaryLabel = secondaryLabel,
+                       let secondaryIcon = secondaryIcon {
+                        Button(action: secondaryAction) {
+                            Label(secondaryLabel, systemImage: secondaryIcon)
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
                     
                     Button(action: clearAction) {
                         Label("清空", systemImage: "trash")
@@ -261,6 +279,9 @@ public struct SharedViews {
             primaryAction: {},
             primaryLabel: "测试",
             primaryIcon: "play",
+            secondaryAction: {},
+            secondaryLabel: "测试2",
+            secondaryIcon: "play",
             clearAction: {},
             copyAction: {},
             swapAction: {},
