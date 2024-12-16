@@ -27,17 +27,23 @@
 		B57917842CFD7E210011E825 /* CryptoTool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CryptoTool.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B57917952CFD7E220011E825 /* CryptoToolTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CryptoToolTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B579179F2CFD7E220011E825 /* CryptoToolUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CryptoToolUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		B57917B22CFD7E220011E825 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B51306E82D104945006251F0 /* Exceptions for "CryptoTool" folder in "CryptoTool" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B57917832CFD7E210011E825 /* CryptoTool */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B57917862CFD7E210011E825 /* CryptoTool */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			children = (
-				B57917842CFD7E210011E825 /* CryptoTool.app */,
-				B57917952CFD7E220011E825 /* CryptoToolTests.xctest */,
-				B579179F2CFD7E220011E825 /* CryptoToolUITests.xctest */,
-				B57917B22CFD7E220011E825 /* Info.plist */,
+			exceptions = (
+				B51306E82D104945006251F0 /* Exceptions for "CryptoTool" folder in "CryptoTool" target */,
 			);
 			path = CryptoTool;
 			sourceTree = "<group>";
@@ -310,6 +316,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = CryptoTool/Info.plist;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -318,7 +325,6 @@
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				INFOPLIST_FILE = CryptoTool/Info.plist;
 			};
 			name = Debug;
 		};
@@ -368,13 +374,13 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = CryptoTool/Info.plist;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
-				INFOPLIST_FILE = CryptoTool/Info.plist;
 			};
 			name = Release;
 		};
@@ -390,6 +396,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"CryptoTool/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CryptoTool/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -400,7 +407,6 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				INFOPLIST_FILE = CryptoTool/Info.plist;
 			};
 			name = Debug;
 		};
@@ -416,6 +422,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"CryptoTool/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CryptoTool/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -426,7 +433,6 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				INFOPLIST_FILE = CryptoTool/Info.plist;
 			};
 			name = Release;
 		};
@@ -437,6 +443,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CryptoTool/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 15.1;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yml.CryptoToolTests;
@@ -444,7 +451,6 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CryptoTool.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CryptoTool";
-				INFOPLIST_FILE = CryptoTool/Info.plist;
 			};
 			name = Debug;
 		};
@@ -455,6 +461,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CryptoTool/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 15.1;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yml.CryptoToolTests;
@@ -462,7 +469,6 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CryptoTool.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CryptoTool";
-				INFOPLIST_FILE = CryptoTool/Info.plist;
 			};
 			name = Release;
 		};
@@ -472,13 +478,13 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CryptoTool/Info.plist;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yml.CryptoToolUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TEST_TARGET_NAME = CryptoTool;
-				INFOPLIST_FILE = CryptoTool/Info.plist;
 			};
 			name = Debug;
 		};
@@ -488,13 +494,13 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CryptoTool/Info.plist;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yml.CryptoToolUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TEST_TARGET_NAME = CryptoTool;
-				INFOPLIST_FILE = CryptoTool/Info.plist;
 			};
 			name = Release;
 		};
