@@ -14,8 +14,6 @@
 	<string>加密工具 - 支持多种加密算法的工具箱</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2024. All rights reserved.</string>
-	<key>LSMinimumSystemVersion</key>
-	<string>15.1</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 </dict>

@@ -6,27 +6,8 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXContainerItemProxy section */
-		B57917962CFD7E220011E825 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B579177C2CFD7E210011E825 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = B57917832CFD7E210011E825;
-			remoteInfo = CryptoTool;
-		};
-		B57917A02CFD7E220011E825 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B579177C2CFD7E210011E825 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = B57917832CFD7E210011E825;
-			remoteInfo = CryptoTool;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
 		B57917842CFD7E210011E825 /* CryptoTool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CryptoTool.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		B57917952CFD7E220011E825 /* CryptoToolTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CryptoToolTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		B579179F2CFD7E220011E825 /* CryptoToolUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CryptoToolUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -58,20 +39,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B57917922CFD7E220011E825 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B579179C2CFD7E220011E825 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -87,8 +54,6 @@
 			isa = PBXGroup;
 			children = (
 				B57917842CFD7E210011E825 /* CryptoTool.app */,
-				B57917952CFD7E220011E825 /* CryptoToolTests.xctest */,
-				B579179F2CFD7E220011E825 /* CryptoToolUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -118,46 +83,6 @@
 			productReference = B57917842CFD7E210011E825 /* CryptoTool.app */;
 			productType = "com.apple.product-type.application";
 		};
-		B57917942CFD7E220011E825 /* CryptoToolTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = B57917AC2CFD7E220011E825 /* Build configuration list for PBXNativeTarget "CryptoToolTests" */;
-			buildPhases = (
-				B57917912CFD7E220011E825 /* Sources */,
-				B57917922CFD7E220011E825 /* Frameworks */,
-				B57917932CFD7E220011E825 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				B57917972CFD7E220011E825 /* PBXTargetDependency */,
-			);
-			name = CryptoToolTests;
-			packageProductDependencies = (
-			);
-			productName = CryptoToolTests;
-			productReference = B57917952CFD7E220011E825 /* CryptoToolTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		B579179E2CFD7E220011E825 /* CryptoToolUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = B57917AF2CFD7E220011E825 /* Build configuration list for PBXNativeTarget "CryptoToolUITests" */;
-			buildPhases = (
-				B579179B2CFD7E220011E825 /* Sources */,
-				B579179C2CFD7E220011E825 /* Frameworks */,
-				B579179D2CFD7E220011E825 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				B57917A12CFD7E220011E825 /* PBXTargetDependency */,
-			);
-			name = CryptoToolUITests;
-			packageProductDependencies = (
-			);
-			productName = CryptoToolUITests;
-			productReference = B579179F2CFD7E220011E825 /* CryptoToolUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -170,14 +95,6 @@
 				TargetAttributes = {
 					B57917832CFD7E210011E825 = {
 						CreatedOnToolsVersion = 16.1;
-					};
-					B57917942CFD7E220011E825 = {
-						CreatedOnToolsVersion = 16.1;
-						TestTargetID = B57917832CFD7E210011E825;
-					};
-					B579179E2CFD7E220011E825 = {
-						CreatedOnToolsVersion = 16.1;
-						TestTargetID = B57917832CFD7E210011E825;
 					};
 				};
 			};
@@ -196,28 +113,12 @@
 			projectRoot = "";
 			targets = (
 				B57917832CFD7E210011E825 /* CryptoTool */,
-				B57917942CFD7E220011E825 /* CryptoToolTests */,
-				B579179E2CFD7E220011E825 /* CryptoToolUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		B57917822CFD7E210011E825 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B57917932CFD7E220011E825 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B579179D2CFD7E220011E825 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -234,34 +135,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B57917912CFD7E220011E825 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B579179B2CFD7E220011E825 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		B57917972CFD7E220011E825 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = B57917832CFD7E210011E825 /* CryptoTool */;
-			targetProxy = B57917962CFD7E220011E825 /* PBXContainerItemProxy */;
-		};
-		B57917A12CFD7E220011E825 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = B57917832CFD7E210011E825 /* CryptoTool */;
-			targetProxy = B57917A02CFD7E220011E825 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		B57917A72CFD7E220011E825 /* Debug */ = {
@@ -402,7 +276,8 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yml.CryptoTool;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -428,79 +303,12 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.yml.CryptoTool;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
-		B57917AD2CFD7E220011E825 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = CryptoTool/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 15.1;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yml.CryptoToolTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CryptoTool.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CryptoTool";
-			};
-			name = Debug;
-		};
-		B57917AE2CFD7E220011E825 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = CryptoTool/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 15.1;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yml.CryptoToolTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CryptoTool.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CryptoTool";
-			};
-			name = Release;
-		};
-		B57917B02CFD7E220011E825 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = CryptoTool/Info.plist;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yml.CryptoToolUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = CryptoTool;
-			};
-			name = Debug;
-		};
-		B57917B12CFD7E220011E825 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = CryptoTool/Info.plist;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yml.CryptoToolUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = CryptoTool;
 			};
 			name = Release;
 		};
@@ -521,24 +329,6 @@
 			buildConfigurations = (
 				B57917AA2CFD7E220011E825 /* Debug */,
 				B57917AB2CFD7E220011E825 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		B57917AC2CFD7E220011E825 /* Build configuration list for PBXNativeTarget "CryptoToolTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				B57917AD2CFD7E220011E825 /* Debug */,
-				B57917AE2CFD7E220011E825 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		B57917AF2CFD7E220011E825 /* Build configuration list for PBXNativeTarget "CryptoToolUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				B57917B02CFD7E220011E825 /* Debug */,
-				B57917B12CFD7E220011E825 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

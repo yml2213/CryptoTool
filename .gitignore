@@ -1,7 +1,5 @@
-/.idea/CryptoTool.iml
-/.idea/modules.xml
-/.idea/vcs.xml
-/.idea/workspace.xml
+/.idea
+
 # Xcode
 #
 # gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
