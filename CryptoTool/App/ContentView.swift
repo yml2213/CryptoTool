@@ -14,7 +14,9 @@ struct ContentView: View {
         (icon: "lock.shield.fill", name: "AES", description: "高级加密标准"),
         (icon: "key.horizontal.fill", name: "DES", description: "数据加密标准"),
         (icon: "key.horizontal", name: "RSA", description: "非对称加密算法"),
-        (icon: "doc.fill", name: "Base64", description: "基础编码")
+        (icon: "doc.fill", name: "Base64", description: "基础编码"),
+        (icon: "link", name: "URL", description: "URL编解码"),
+        (icon: "character.book.closed", name: "Unicode", description: "Unicode编解码")
     ]
     
     struct DraggableItem: Identifiable, Equatable {
@@ -138,6 +140,10 @@ struct ContentView: View {
                     RSAView()
                 case "Base64":
                     Base64View()
+                case "URL":
+                    URLView()
+                case "Unicode":
+                    UnicodeView()
                 default:
                     MD5View()
                 }
